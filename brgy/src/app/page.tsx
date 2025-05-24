@@ -1,11 +1,25 @@
+'use client';
+
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "@/components/navbar";
 import styles from "@/styles/geometry.module.css";
-import { Button } from "@/components/ui/button";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useEffect } from "react";
+import { useAccount } from "wagmi";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 export default function Home() {
+  const { isConnected } = useAccount();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isConnected) {
+      router.push("/list");
+    }
+  }, [isConnected, router]);
+
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text-primary)]">
       <Navbar />
@@ -23,16 +37,8 @@ export default function Home() {
           </h1>
           <p className="text-xs sm:text-sm">A system for logging and tracking barangay incidents.</p>
 
-          <Button
-            className="px-12 py-2 font-bold text-white"
-            style={{ backgroundColor: 'var(--color-primary)',}}
-            asChild
-          >
-            <Link href="/list" className="hover:opacity-90 transition-opacity">
-              Connect Wallet
-            </Link>
-          </Button>
-
+          {/* ✅ No Link needed — use effect handles routing after connect */}
+          <ConnectButton showBalance={false} />
         </main>
       </div>
     </div>
