@@ -1,19 +1,16 @@
-"use client";
+"use client"; // Enables client-side rendering in Next.js
 
+// Import necessary modules
 import Link from "next/link";
 import { useState } from "react";
-import Navbar from "../../components/admin";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import Navbar from "@/components/admin";
 
-// Define Blotter type without 'compliant' and 'status', add 'dateCreated'
+// Import styles
+import "@/styles/list.css";
+import "@/styles/table.css";
+import "@/styles/button.css";
+
+// Define the structure of a Blotter record
 type Blotter = {
   caseNumber: string;
   respondent: string;
@@ -22,197 +19,156 @@ type Blotter = {
 };
 
 export default function BlotterList() {
-  const [search, setSearch] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const recordsPerPage = 25;
+  // State for search input and current pagination page
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 25; // Number of records per page
 
-  // Generate mock blotter data
+  // Generate dummy data for demonstration
   const allBlotters: Blotter[] = Array.from({ length: 100 }, (_, i) => ({
     caseNumber: `CASE-${1000 + i}`,
     respondent: `Respondent ${i + 1}`,
     incidentType: i % 3 === 0 ? "Theft" : i % 3 === 1 ? "Assault" : "Dispute",
-    dateCreated: new Date(Date.now() - i * 86400000).toLocaleDateString(),
+    dateCreated: new Date(Date.now() - i * 86400000).toLocaleDateString(), // Decrement by 1 day
   }));
 
-  // Filter blotters by search input
+  // Filter records based on the search input
   const filteredBlotters = search.trim()
     ? allBlotters.filter((b) =>
-      b.respondent.toLowerCase().includes(search.toLowerCase())
-    )
+        b.respondent.toLowerCase().includes(search.toLowerCase())
+      )
     : allBlotters;
 
+  // Pagination calculations
   const totalPages = Math.ceil(filteredBlotters.length / recordsPerPage);
   const indexOfLast = currentPage * recordsPerPage;
   const indexOfFirst = indexOfLast - recordsPerPage;
   const currentBlotters = filteredBlotters.slice(indexOfFirst, indexOfLast);
 
-  // Handler for viewing blotter detail
-  const handleView = (caseNumber: string): void => {
+  // View button click handler (mock action)
+  const handleView = (caseNumber: string) => {
     alert(`Viewing details for ${caseNumber}`);
   };
 
-  // Reset filters and pagination
-  const handleRefresh = (): void => {
+  // Refresh button resets search and page
+  const handleRefresh = () => {
     setSearch("");
     setCurrentPage(1);
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text-primary)] flex flex-col">
-      <Navbar />
+    <div className="blotter-container">
+      <Navbar /> {/* Top navigation bar */}
+      <div className="blotter-wrapper">
+        <div className="blotter-card">
+          <h1 className="blotter-title">BLOTTER RECORDS</h1>
 
-      <div className="flex-grow flex items-center justify-center px-4 py-8">
-        <div className="max-w-5xl w-full bg-white rounded-md shadow-md p-8 flex flex-col">
-          <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-4">
-            BLOTTER RECORDS
-          </h1>
-
-          {/* Search bar */}
-          <label className="block mb-2 font-semibold">Search</label>
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            <div className="flex flex-grow h-9 items-center border border-[var(--color-table)] rounded-md overflow-hidden">
+          {/* Search Bar Section */}
+          <label className="search-label">Search</label>
+          <div className="search-bar">
+            <div className="search-input-group">
+              <i className="ri-search-line search-icon"></i>
               <input
                 type="text"
                 placeholder="Search here..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="flex-grow h-full px-3 text-sm focus:outline-none"
               />
-              <Button
-                variant="ghost"
-                className="h-full px-3 text-[var(--color-table)] rounded-none"
-                onClick={() => setCurrentPage(1)}
-              >
-                <i className="ri-search-line text-lg"></i>
-              </Button>
             </div>
 
-            <Button
-              className="h-9 text-sm flex items-center gap-1 border-0 hover:!bg-[var(--color-secondary-table)]"
-              style={{
-                backgroundColor: "var(--color-secondary-table)",
-                color: "var(--color-text-primary)",
-              }}
-            >
-              <i className="ri-equalizer-line"></i> Filter
-            </Button>
+            {/* Filter button removed */}
 
-            <Link href="/add" className="hover:opacity-90 transition-opacity">
-              <Button
-                className="h-9 text-white text-sm flex items-center gap-1"
-                style={{ backgroundColor: "var(--color-dark-blue)" }}
-              >
+            {/* Add Blotter Button */}
+            <Link href="/add">
+              <button className="add-btn">
                 <i className="ri-add-line"></i> Add Blotter
-              </Button>
+              </button>
             </Link>
           </div>
 
           {/* Refresh Button */}
-          <button
-            className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1"
-            onClick={handleRefresh}
-          >
+          <button className="refresh-btn" onClick={handleRefresh}>
             ⟳ Refresh
           </button>
 
-          {/* Blotter Table */}
-          <div className="rounded overflow-hidden border border-[var(--color-table)]">
-            <div className="max-h-[500px] overflow-y-auto minimal-scrollbar">
-              <Table className="w-full text-sm">
-                <TableHeader className="bg-[var(--color-bg)] sticky top-0 z-10">
-                  <TableRow className="border-b border-[var(--color-table)]">
-                    <TableHead className="text-center">No.</TableHead>
-                    <TableHead className="text-center">Case Number</TableHead>
-                    <TableHead className="text-center">Respondent</TableHead>
-                    <TableHead className="text-center">Incident Type</TableHead>
-                    <TableHead className="text-center">Date Created</TableHead>
-                    <TableHead className="text-center">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+          {/* Table Displaying Blotter Data */}
+          <div className="table-wrapper">
+            <div className="table-scroll">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>No.</th>
+                    <th>Case Number</th>
+                    <th>Respondent</th>
+                    <th>Incident Type</th>
+                    <th>Date Created</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {currentBlotters.length > 0 ? (
                     currentBlotters.map((blotter, index) => (
-                      <TableRow
-                        key={index}
-                        className="hover:bg-gray-100 border-b border-[var(--color-table)]"
-                      >
-                        <TableCell className="text-center py-1 px-2">
-                          {indexOfFirst + index + 1}
-                        </TableCell>
-                        <TableCell className="text-center py-1 px-2">
-                          {blotter.caseNumber}
-                        </TableCell>
-                        <TableCell className="text-center py-1 px-2">
-                          {blotter.respondent}
-                        </TableCell>
-                        <TableCell className="text-center py-1 px-2">
-                          {blotter.incidentType}
-                        </TableCell>
-                        <TableCell className="text-center py-1 px-2">
-                          {blotter.dateCreated}
-                        </TableCell>
-                        <TableCell className="text-center py-1 px-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="hover:text-blue-800"
+                      <tr key={index}>
+                        <td>{indexOfFirst + index + 1}</td>
+                        <td>{blotter.caseNumber}</td>
+                        <td>{blotter.respondent}</td>
+                        <td>{blotter.incidentType}</td>
+                        <td>{blotter.dateCreated}</td>
+                        <td>
+                          <button
+                            className="action-btn"
                             onClick={() => handleView(blotter.caseNumber)}
                           >
-                            <i className="ri-eye-line text-lg text-[var(--color-table)]" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
+                            View
+                          </button>
+                        </td>
+                      </tr>
                     ))
                   ) : (
-                    <TableRow className="border-b border-[var(--color-table)]">
-                      <TableCell
-                        colSpan={6}
-                        className="text-center text-gray-500 italic py-4"
-                      >
+                    // Message for no search results
+                    <tr>
+                      <td colSpan={6} className="no-records">
                         No blotter cases found.
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   )}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          {/* Pagination */}
-          <div className="flex justify-end items-center gap-2 mt-4 text-sm">
-            <Button
-              variant="ghost"
-              className="text-gray-500 hover:text-black p-2"
+          {/* Pagination Controls */}
+          <div className="pagination">
+            {/* Previous Button */}
+            <button
+              className="pagination-btn"
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
-              <i className="ri-arrow-left-s-line text-xl"></i>
-            </Button>
+              <i className="ri-arrow-left-s-line"></i>
+            </button>
 
+            {/* Page Buttons */}
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
+              <button
                 key={page}
-                variant={currentPage === page ? "default" : "ghost"}
-                className={`w-8 h-8 flex items-center justify-center rounded-full ${currentPage === page
-                    ? "bg-[var(--color-primary)] text-white"
-                    : ""
-                  }`}
+                className={`pagination-btn ${currentPage === page ? "active" : ""}`}
                 onClick={() => setCurrentPage(page)}
               >
                 {page}
-              </Button>
+              </button>
             ))}
 
-            <Button
-              variant="ghost"
-              className="text-gray-500 hover:text-black p-2"
+            {/* Next Button */}
+            <button
+              className="pagination-btn"
               onClick={() =>
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
               disabled={currentPage === totalPages}
             >
-              <i className="ri-arrow-right-s-line text-xl"></i>
-            </Button>
+              <i className="ri-arrow-right-s-line"></i>
+            </button>
           </div>
         </div>
       </div>

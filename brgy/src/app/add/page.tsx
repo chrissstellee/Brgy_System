@@ -1,418 +1,476 @@
 "use client";
 import Link from "next/link";
-import Navbar from "@/components/navbar";
-import { Button } from "@/components/ui/button";
-import React from "react";
+import React, { useState } from "react";
+import BlotterPdfModal from "@/components/pdf-modal";
+
+import "@/styles/form.css";
+import "@/styles/button.css";
+import "@/styles/container.css";
+import "@/styles/validation.css";
+
+type FormData = {
+  complainantName: string;
+  complainantContact: string;
+  complainantAge: string;
+  complainantAddress: string;
+  respondentName: string;
+  respondentContact: string;
+  respondentAge: string;
+  respondentAddress: string;
+  incidentType: string;
+  natureOfComplaint: string;
+  incidentDate: string;
+  incidentTime: string;
+  incidentLocation: string;
+  summary: string;
+  complainantStatement: string;
+  witnessName: string;
+  witnessContact: string;
+  witnessAge: string;
+  witnessAddress: string;
+  witnessStatement: string;
+};
 
 export default function AddBlotter() {
+  const [formData, setFormData] = useState<FormData>({
+    complainantName: "",
+    complainantContact: "",
+    complainantAge: "",
+    complainantAddress: "",
+    respondentName: "",
+    respondentContact: "",
+    respondentAge: "",
+    respondentAddress: "",
+    incidentType: "",
+    natureOfComplaint: "",
+    incidentDate: "",
+    incidentTime: "",
+    incidentLocation: "",
+    summary: "",
+    complainantStatement: "",
+    witnessName: "",
+    witnessContact: "",
+    witnessAge: "",
+    witnessAddress: "",
+    witnessStatement: "",
+  });
+
+  const [errors, setErrors] = useState<{ [key in keyof FormData]?: string }>({});
+  const [showPdfModal, setShowPdfModal] = useState(false);
+
+  // Get today's date in YYYY-MM-DD format for min attribute & validation
+  const getTodayDate = (): string => {
+    return new Date().toISOString().split("T")[0];
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    const key = name as keyof FormData;
+
+    // Limit contact fields to max 11 digits and only numeric input
+    if (
+      (key === "complainantContact" ||
+        key === "respondentContact" ||
+        key === "witnessContact") &&
+      (value.length > 11 || !/^\d*$/.test(value))
+    ) {
+      return; // Reject if too long or non-numeric
+    }
+
+    // Limit age fields: numeric only, 1 to 3 digits, no zero or empty
+    if (
+      (key === "complainantAge" ||
+        key === "respondentAge" ||
+        key === "witnessAge") &&
+      (!/^\d{0,3}$/.test(value) || value === "0")
+    ) {
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => ({ ...prev, [key]: "" })); // Clear error on change
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const requiredFields: (keyof FormData)[] = [
+      "complainantName",
+      "complainantContact",
+      "complainantAge",
+      "complainantAddress",
+      "respondentName",
+      "respondentContact",
+      "respondentAge",
+      "respondentAddress",
+      "incidentType",
+      "natureOfComplaint",
+      "incidentDate",
+      "incidentTime",
+      "incidentLocation",
+      "summary",
+      "complainantStatement",
+    ];
+
+    const newErrors: { [key in keyof FormData]?: string } = {};
+
+    requiredFields.forEach((field) => {
+      if (!formData[field]) {
+        newErrors[field] = "This field is required";
+      }
+    });
+
+    // incidentDate cannot be in the future
+    if (
+      formData.incidentDate &&
+      formData.incidentDate > getTodayDate()
+    ) {
+      newErrors.incidentDate = "Incident date cannot be in the future";
+    }
+
+    // Age is required and cannot be 0 and more than 3 inputs
+    ["complainantAge", "respondentAge"].forEach((field) => {
+      const age = formData[field as keyof FormData];
+      if (!age) {
+        newErrors[field as keyof FormData] = "This field is required";
+      } else if (age === "0" || !/^\d{1,3}$/.test(age)) {
+        newErrors[field as keyof FormData] = "Enter a valid age";
+      }
+    });
+
+    // For witnessAge, only validate if it has a value (optional field)
+    const witnessAge = formData.witnessAge;
+    if (witnessAge) {
+      if (witnessAge === "0" || !/^\d{1,3}$/.test(witnessAge)) {
+        newErrors.witnessAge = "Enter a valid age";
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    // No errors — show PDF modal
+    setShowPdfModal(true);
+  };
+
+  const renderInputClass = (
+    field: keyof FormData,
+    base: string = "custom-input"
+  ) => `${base} ${errors[field] ? "input-error" : ""}`;
+
+  const renderError = (field: keyof FormData) =>
+    errors[field] ? (
+      <p className="error-text" role="alert">
+        {errors[field]}
+      </p>
+    ) : null;
+
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-text-primary)] flex flex-col">
-      <Navbar />
-      <div className="flex-grow flex items-center justify-center px-4 py-8">
-        <div className="max-w-5xl w-full bg-white rounded-md shadow-md p-8 flex flex-col">
-          <h1 className="text-2xl font-bold text-[var(--color-primary)] mb-4">
-            BLOTTER FORM
-          </h1>
-
-
-          {/* Main Form Container */}
-          <div className="bg-white border border-[var(--color-table)] mt-3 p-5 rounded-lg space-y-8">
+    <div className="container">
+      <div className="content-wrapper">
+        <div className="form-container">
+          <h1 className="form-title">BLOTTER FORM</h1>
+          <form onSubmit={handleSubmit}>
             {/* A. Complainant Information */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4">A. Complainant Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="flex flex-col md:col-span-2">
-                  <label className="text-sm font-medium mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    placeholder="Enter full name here..."
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                      outline: "none",
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "var(--color-table)"}
-                    onBlur={(e) => e.target.style.borderColor = "var(--color-table)"}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium mb-1">Contact Number</label>
-                  <input
-                    type="text"
-                    placeholder="Enter contact number"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                      outline: "none",
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "var(--color-table)"}
-                    onBlur={(e) => e.target.style.borderColor = "var(--color-table)"}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium mb-1">Age</label>
-                  <input
-                    type="number"
-                    placeholder="Enter age"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                      outline: "none",
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "var(--color-table)"}
-                    onBlur={(e) => e.target.style.borderColor = "var(--color-table)"}
-                  />
-                </div>
+            <h2 className="section-heading">A. Complainant Information</h2>
+            <div className="grid-4">
+              <div className="form-group col-span-2">
+                <label className="form-label">Full Name</label>
+                <input
+                  type="text"
+                  name="complainantName"
+                  value={formData.complainantName}
+                  onChange={handleChange}
+                  className={renderInputClass("complainantName")}
+                  placeholder="Enter full name here..."
+                />
+                {renderError("complainantName")}
               </div>
+              <div className="form-group">
+                <label className="form-label">Contact Number</label>
+                <input
+                  type="text"
+                  name="complainantContact"
+                  value={formData.complainantContact}
+                  onChange={handleChange}
+                  className={renderInputClass("complainantContact")}
+                  placeholder="Enter contact number"
+                />
+                {renderError("complainantContact")}
+              </div>
+              <div className="form-group">
+                <label className="form-label">Age</label>
+                <input
+                  type="number"
+                  name="complainantAge"
+                  value={formData.complainantAge}
+                  onChange={handleChange}
+                  className={renderInputClass("complainantAge")}
+                  placeholder="0"
+                />
+                {renderError("complainantAge")}
+              </div>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
-                <div className="flex flex-col md:col-span-4">
-                  <label className="text-sm font-medium mb-1">Address</label>
-                  <input
-                    type="text"
-                    placeholder="Enter address"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                      outline: "none",
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "var(--color-table)"}
-                    onBlur={(e) => e.target.style.borderColor = "var(--color-table)"}
-                  />
-                </div>
+            <div className="grid-4 mt-5">
+              <div className="form-group col-span-4">
+                <label className="form-label">Address</label>
+                <input
+                  type="text"
+                  name="complainantAddress"
+                  value={formData.complainantAddress}
+                  onChange={handleChange}
+                  className={renderInputClass("complainantAddress")}
+                  placeholder="Enter address"
+                />
+                {renderError("complainantAddress")}
               </div>
             </div>
 
             {/* B. Respondent Information */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4">B. Respondent Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="flex flex-col md:col-span-2">
-                  <label className="text-sm font-medium mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    placeholder="Enter full name here..."
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                      outline: "none",
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "var(--color-table)"}
-                    onBlur={(e) => e.target.style.borderColor = "var(--color-table)"}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium mb-1">Contact Number</label>
-                  <input
-                    type="text"
-                    placeholder="Enter contact number"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                      outline: "none",
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "var(--color-table)"}
-                    onBlur={(e) => e.target.style.borderColor = "var(--color-table)"}
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium mb-1">Age</label>
-                  <input
-                    type="number"
-                    placeholder="Enter age"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                      outline: "none",
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "var(--color-table)"}
-                    onBlur={(e) => e.target.style.borderColor = "var(--color-table)"}
-                  />
-                </div>
+            <h2 className="section-heading mt-6">B. Respondent Information</h2>
+            <div className="grid-4">
+              <div className="form-group col-span-2">
+                <label className="form-label">Full Name</label>
+                <input
+                  type="text"
+                  name="respondentName"
+                  value={formData.respondentName}
+                  onChange={handleChange}
+                  className={renderInputClass("respondentName")}
+                  placeholder="Enter full name here..."
+                />
+                {renderError("respondentName")}
               </div>
+              <div className="form-group">
+                <label className="form-label">Contact Number</label>
+                <input
+                  type="text"
+                  name="respondentContact"
+                  value={formData.respondentContact}
+                  onChange={handleChange}
+                  className={renderInputClass("respondentContact")}
+                  placeholder="Enter contact number"
+                />
+                {renderError("respondentContact")}
+              </div>
+              <div className="form-group">
+                <label className="form-label">Age</label>
+                <input
+                  type="number"
+                  name="respondentAge"
+                  value={formData.respondentAge}
+                  onChange={handleChange}
+                  className={renderInputClass("respondentAge")}
+                  placeholder="0"
+                />
+                {renderError("respondentAge")}
+              </div>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
-                <div className="flex flex-col md:col-span-4">
-                  <label className="text-sm font-medium mb-1">Address</label>
-                  <input
-                    type="text"
-                    placeholder="Enter address"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                      outline: "none",
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "var(--color-table)"}
-                    onBlur={(e) => e.target.style.borderColor = "var(--color-table)"}
-                  />
-                </div>
+            <div className="grid-4 mt-5">
+              <div className="form-group col-span-4">
+                <label className="form-label">Address</label>
+                <input
+                  type="text"
+                  name="respondentAddress"
+                  value={formData.respondentAddress}
+                  onChange={handleChange}
+                  className={renderInputClass("respondentAddress")}
+                  placeholder="Enter address"
+                />
+                {renderError("respondentAddress")}
               </div>
             </div>
 
             {/* C. Complaint Details */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4">C. Complaint Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium mb-1">Incident Type</label>
-                  <input
-                    type="text"
-                    placeholder="Enter incident type"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                    }}
-                    onFocus={(e) =>
-                      (e.target.style.borderColor = "rgba(var(--color-primary-rgb), 0.6)")
-                    }
-                    onBlur={(e) =>
-                      (e.target.style.borderColor = "var(--color-table)")
-                    }
-                  />
-                </div>
-                <div className="flex flex-col md:col-span-2">
-                  <label className="text-sm font-medium mb-1">Nature of Complaint</label>
-                  <input
-                    type="text"
-                    placeholder="Enter nature of complaint"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                    }}
-                    onFocus={(e) =>
-                      (e.target.style.borderColor = "rgba(var(--color-primary-rgb), 0.6)")
-                    }
-                    onBlur={(e) =>
-                      (e.target.style.borderColor = "var(--color-table)")
-                    }
-                  />
-                </div>
+            <h2 className="section-heading mt-6">C. Complaint Details</h2>
+            <div className="grid-4">
+              <div className="form-group">
+                <label className="form-label">Incident Type</label>
+                <input
+                  type="text"
+                  name="incidentType"
+                  value={formData.incidentType}
+                  onChange={handleChange}
+                  className={renderInputClass("incidentType")}
+                  placeholder="Enter incident type"
+                />
+                {renderError("incidentType")}
+              </div>
+              <div className="form-group col-span-2">
+                <label className="form-label">Nature of Complaint</label>
+                <input
+                  type="text"
+                  name="natureOfComplaint"
+                  value={formData.natureOfComplaint}
+                  onChange={handleChange}
+                  className={renderInputClass("natureOfComplaint")}
+                  placeholder="Enter nature of complaint"
+                />
+                {renderError("natureOfComplaint")}
               </div>
             </div>
-
 
             {/* D. Incident Information */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4">D. Incident Information</h2>
-
-              {/* Date and Time Row */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
-                <div className="flex flex-col md:col-span-2">
-                  <label className="text-sm font-medium mb-1">Date</label>
-                  <input
-                    type="date"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                      outline: "none",
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "var(--color-table)"}
-                    onBlur={(e) => e.target.style.borderColor = "var(--color-table)"}
-                  />
-                </div>
-                <div className="flex flex-col md:col-span-2">
-                  <label className="text-sm font-medium mb-1">Time</label>
-                  <input
-                    type="time"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                      outline: "none",
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "var(--color-table)"}
-                    onBlur={(e) => e.target.style.borderColor = "var(--color-table)"}
-                  />
-                </div>
+            <h2 className="section-heading mt-6">D. Incident Information</h2>
+            <div className="grid-4">
+              <div className="form-group col-span-2">
+                <label className="form-label">Date</label>
+                <input
+                  type="date"
+                  name="incidentDate"
+                  value={formData.incidentDate}
+                  min={getTodayDate()}
+                  onChange={handleChange}
+                  className={renderInputClass("incidentDate")}
+                />
+                {renderError("incidentDate")}
               </div>
-
-              {/* Location Row */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
-                <div className="flex flex-col md:col-span-4">
-                  <label className="text-sm font-medium mb-1">Location</label>
-                  <input
-                    type="text"
-                    placeholder="Enter location"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                      outline: "none",
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "var(--color-table)"}
-                    onBlur={(e) => e.target.style.borderColor = "var(--color-table)"}
-                  />
-                </div>
+              <div className="form-group col-span-2">
+                <label className="form-label">Time</label>
+                <input
+                  type="time"
+                  name="incidentTime"
+                  value={formData.incidentTime}
+                  onChange={handleChange}
+                  className={renderInputClass("incidentTime")}
+                />
+                {renderError("incidentTime")}
               </div>
             </div>
 
+            <div className="grid-4 mt-5">
+              <div className="form-group col-span-4">
+                <label className="form-label">Location</label>
+                <input
+                  type="text"
+                  name="incidentLocation"
+                  value={formData.incidentLocation}
+                  onChange={handleChange}
+                  className={renderInputClass("incidentLocation")}
+                  placeholder="Enter location"
+                />
+                {renderError("incidentLocation")}
+              </div>
+            </div>
 
             {/* E. Statement Summary */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4">E. Statement Summary</h2>
-
-              {/* First row: Summary of Incident */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="flex flex-col md:col-span-4">
-                  <label className="text-sm font-medium mb-1">Summary of Incident</label>
-                  <textarea
-                    placeholder="Enter summary of incident..."
-                    rows={5}
-                    className="border rounded-md px-3 py-1.5 text-sm resize-none focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                    }}
-                    onFocus={(e) =>
-                      (e.target.style.borderColor = "rgba(var(--color-primary-rgb), 0.6)")
-                    }
-                    onBlur={(e) =>
-                      (e.target.style.borderColor = "var(--color-table)")
-                    }
-                  />
-                </div>
+            <h2 className="section-heading mt-6">E. Statement Summary</h2>
+            <div className="grid-4">
+              <div className="form-group col-span-4">
+                <label className="form-label">Summary of Incident</label>
+                <textarea
+                  name="summary"
+                  rows={5}
+                  value={formData.summary}
+                  onChange={handleChange}
+                  className={renderInputClass("summary", "custom-textarea")}
+                  placeholder="Enter summary of incident..."
+                />
+                {renderError("summary")}
               </div>
-
-              {/* Second row: Complainant's Statement */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                <div className="flex flex-col md:col-span-4">
-                  <label className="text-sm font-medium mb-1">Complainant's Statement</label>
-                  <textarea
-                    placeholder="Enter complainant's full statement..."
-                    rows={5}
-                    className="border rounded-md px-3 py-1.5 text-sm resize-none focus:outline-none"
-                    style={{
-                      borderColor: "var(--color-table)",
-                    }}
-                    onFocus={(e) =>
-                      (e.target.style.borderColor = "rgba(var(--color-primary-rgb), 0.6)")
-                    }
-                    onBlur={(e) =>
-                      (e.target.style.borderColor = "var(--color-table)")
-                    }
-                  />
-                </div>
+            </div>
+            <div className="grid-4 mt-4">
+              <div className="form-group col-span-4">
+                <label className="form-label">Complainant's Statement</label>
+                <textarea
+                  name="complainantStatement"
+                  rows={5}
+                  value={formData.complainantStatement}
+                  onChange={handleChange}
+                  className={renderInputClass("complainantStatement", "custom-textarea")}
+                  placeholder="Enter complainant's full statement..."
+                />
+                {renderError("complainantStatement")}
               </div>
             </div>
 
-
-            {/* F. Witness Information */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4">F. Witness Information</h2>
-
-              {/* Complainant details */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="flex flex-col md:col-span-2">
-                  <label className="text-sm font-medium mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    placeholder="Enter full name here..."
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{ borderColor: "var(--color-table)" }}
-                    onFocus={(e) =>
-                      (e.target.style.borderColor = "rgba(var(--color-primary-rgb), 0.6)")
-                    }
-                    onBlur={(e) =>
-                      (e.target.style.borderColor = "var(--color-table)")
-                    }
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium mb-1">Contact Number</label>
-                  <input
-                    type="text"
-                    placeholder="Enter contact number"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{ borderColor: "var(--color-table)" }}
-                    onFocus={(e) =>
-                      (e.target.style.borderColor = "rgba(var(--color-primary-rgb), 0.6)")
-                    }
-                    onBlur={(e) =>
-                      (e.target.style.borderColor = "var(--color-table)")
-                    }
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium mb-1">Age</label>
-                  <input
-                    type="number"
-                    placeholder="Enter age"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{ borderColor: "var(--color-table)" }}
-                    onFocus={(e) =>
-                      (e.target.style.borderColor = "rgba(var(--color-primary-rgb), 0.6)")
-                    }
-                    onBlur={(e) =>
-                      (e.target.style.borderColor = "var(--color-table)")
-                    }
-                  />
-                </div>
+            {/* F. Witness Information (optional) */}
+            <h2 className="section-heading mt-6">F. Witness Information</h2>
+            <div className="grid-4">
+              <div className="form-group col-span-2">
+                <label className="form-label">Full Name</label>
+                <input
+                  type="text"
+                  name="witnessName"
+                  value={formData.witnessName}
+                  onChange={handleChange}
+                  className="custom-input"
+                  placeholder="Enter full name here..."
+                />
               </div>
-
-              {/* Address */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5">
-                <div className="flex flex-col md:col-span-4">
-                  <label className="text-sm font-medium mb-1">Address</label>
-                  <input
-                    type="text"
-                    placeholder="Enter address"
-                    className="border rounded-md px-3 py-1.5 text-sm focus:outline-none"
-                    style={{ borderColor: "var(--color-table)" }}
-                    onFocus={(e) =>
-                      (e.target.style.borderColor = "rgba(var(--color-primary-rgb), 0.6)")
-                    }
-                    onBlur={(e) =>
-                      (e.target.style.borderColor = "var(--color-table)")
-                    }
-                  />
-                </div>
+              <div className="form-group">
+                <label className="form-label">Contact Number</label>
+                <input
+                  type="text"
+                  name="witnessContact"
+                  value={formData.witnessContact}
+                  onChange={handleChange}
+                  className="custom-input"
+                  placeholder="Enter contact number"
+                />
               </div>
-
-              {/* Witness Statement */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                <div className="flex flex-col md:col-span-4">
-                  <label className="text-sm font-medium mb-1">Witness Statement</label>
-                  <textarea
-                    placeholder="Enter witness full statement..."
-                    rows={5}
-                    className="border rounded-md px-3 py-1.5 text-sm resize-none focus:outline-none"
-                    style={{ borderColor: "var(--color-table)" }}
-                    onFocus={(e) =>
-                      (e.target.style.borderColor = "rgba(var(--color-primary-rgb), 0.6)")
-                    }
-                    onBlur={(e) =>
-                      (e.target.style.borderColor = "var(--color-table)")
-                    }
-                  />
-                </div>
+              <div className="form-group">
+                <label className="form-label">Age</label>
+                <input
+                  type="number"
+                  name="witnessAge"
+                  value={formData.witnessAge}
+                  onChange={handleChange}
+                  className="custom-input"
+                  placeholder="0"
+                />
               </div>
             </div>
-          </div>
+            <div className="grid-4 mt-5">
+              <div className="form-group col-span-4">
+                <label className="form-label">Address</label>
+                <input
+                  type="text"
+                  name="witnessAddress"
+                  value={formData.witnessAddress}
+                  onChange={handleChange}
+                  className="custom-input"
+                  placeholder="Enter address"
+                />
+              </div>
+            </div>
+            <div className="grid-4 mt-4">
+              <div className="form-group col-span-4">
+                <label className="form-label">Witness Statement</label>
+                <textarea
+                  name="witnessStatement"
+                  rows={5}
+                  value={formData.witnessStatement}
+                  onChange={handleChange}
+                  className="custom-textarea"
+                  placeholder="Enter witness full statement..."
+                />
+              </div>
+            </div>
 
-          {/* Button Group */}
-          <div className="flex justify-end gap-[10px] mt-6">
-            <Link href="/list" className="hover:opacity-90 transition-opacity">
-              <Button
-                className="h-9 text-sm"
-                style={{ backgroundColor: 'var(--color-table)', color: 'white' }}
-              >
-                Cancel
-              </Button>
-            </Link>
-
-            <Link href="/list" className="hover:opacity-90 transition-opacity">
-              <Button
-                className="h-9 text-sm"
-                style={{ backgroundColor: 'var(--color-dark-blue)', color: 'white' }}
-              >
-                Save and Print
-              </Button>
-            </Link>
-          </div>
-
+            {/* Button Group */}
+            <div className="button-group">
+              <Link href="/list" className="button button-cancel">Cancel</Link>
+              <button type="submit" className="button button-save">Save</button>
+            </div>
+          </form>
         </div>
       </div>
+
+      {/* PDF Modal */}
+      {showPdfModal && (
+        <BlotterPdfModal
+          formData={formData}
+          onClose={() => setShowPdfModal(false)}
+        />
+      )}
+
     </div>
   );
 }
-
-
-
-
