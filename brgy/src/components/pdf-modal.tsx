@@ -1,9 +1,14 @@
 "use client";
 import React, { useRef } from "react";
-import BlotterPdfDocument from "@/app/add/pdf";
-import "@/styles/pdf.css";
-import "@/styles/modal.css";
+import jsPDF from "jspdf";                
+import html2canvas from "html2canvas";    
 
+import BlotterPdfDocument from "@/app/add/pdf";  
+import "@/styles/pdf.css";               
+import "@/styles/modal.css";   
+import "@/styles/button.css";             
+
+// Type defining the structure of the form data expected in the blotter report
 type FormData = {
   complainantName: string;
   complainantContact: string;
@@ -27,82 +32,83 @@ type FormData = {
   witnessStatement: string;
 };
 
+// Props interface for the BlotterPdfModal component
 interface BlotterPdfModalProps {
-  formData: FormData;
-  onClose: () => void;
+  formData: FormData;          // Data to populate the PDF content
+  onClose: () => void;         // Callback to close the modal
 }
 
 const BlotterPdfModal: React.FC<BlotterPdfModalProps> = ({ formData, onClose }) => {
+  // Reference to the div that contains the PDF content to be exported
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Function to create a sanitized filename by replacing non-alphanumeric characters with dashes
   const sanitizeFileName = (name: string) =>
     name.replace(/[^a-z0-9]/gi, "-").toLowerCase();
 
-  const getPrintHtml = (content: string) => `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Blotter Report - ${formData.complainantName}</title>
-        <style>
-          @page { size: A4; margin: 0.5in; }
-          body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-          .pdf-document { width: 100% !important; }
-        </style>
-      </head>
-      <body>
-        ${content}
-      </body>
-    </html>
-  `;
-
-  const handlePrint = () => {
+  // Function to generate and download the PDF from the modal content
+  const handleDownload = async () => {
     const element = printRef.current;
-    if (!element) return;
+    if (!element) return;   // If the ref is not set, abort
 
-    const printWindow = window.open("", "_blank");
-    if (printWindow) {
-      printWindow.document.write(getPrintHtml(element.innerHTML));
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
+    // Use html2canvas to capture the modal content as a canvas image with higher resolution (scale: 2)
+    const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+
+    // Convert the canvas to a PNG image data URL
+    const imgData = canvas.toDataURL("image/png");
+
+    // Initialize jsPDF with portrait mode, millimeter units, and A4 page size
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    // Get PDF page dimensions
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    // Calculate the image height to maintain aspect ratio based on PDF width
+    const imgWidth = pdfWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    let heightLeft = imgHeight;  // Track remaining height to print
+    let position = 0;            // Vertical position on the PDF page
+
+    // Add the first page with the captured image
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pdfHeight;     // Reduce remaining height by one page height
+
+    // If content overflows one page, add additional pages and draw the remaining image portions
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
     }
+
+    // Create a sanitized filename based on the complainant's name
+    const fileName = sanitizeFileName(`blotter-report-${formData.complainantName}`) + ".pdf";
+
+    // Save/download the generated PDF with the constructed filename
+    pdf.save(fileName);
   };
 
-  const handleDownload = () => {
-    const element = printRef.current;
-    if (!element) return;
-
-    const htmlContent = getPrintHtml(element.innerHTML);
-    const blob = new Blob([htmlContent], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const fileName = sanitizeFileName(`blotter-report-${formData.complainantName}`) + ".html";
-
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
+  // Render the modal UI with preview and buttons
   return (
     <div className="modal-overlay">
       <div className="modal-content">
+        {/* Modal header with title and close button */}
         <div className="modal-header">
           <h2 className="modal-title">Blotter Report Preview</h2>
           <button onClick={onClose} className="close-button">&times;</button>
         </div>
 
+        {/* Modal body contains the blotter report content to be exported */}
         <div className="modal-body" ref={printRef}>
           <BlotterPdfDocument formData={formData} />
         </div>
 
+        {/* Modal footer with action buttons */}
         <div className="modal-footer gap-2">
           <button onClick={onClose} className="btn btn-gray">Close</button>
-          <button onClick={handlePrint} className="btn btn-blue">Print</button>
-          {/* <button onClick={handleDownload} className="btn btn-blue">Download</button> */}
+          <button onClick={handleDownload} className="btn btn-blue">Download PDF</button>
         </div>
       </div>
     </div>

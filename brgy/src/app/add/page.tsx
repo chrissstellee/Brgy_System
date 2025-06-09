@@ -290,7 +290,7 @@ export default function AddBlotter() {
             {/* C. Complaint Details */}
             <h2 className="section-heading mt-6">C. Complaint Details</h2>
             <div className="grid-4">
-              <div className="form-group">
+              <div className="form-group col-span-2">
                 <label className="form-label">Incident Type</label>
                 <input
                   type="text"
