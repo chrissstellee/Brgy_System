@@ -19,15 +19,9 @@
     "@rainbow-me/rainbowkit": "^2.2.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
->>>>>>> Stashed changes
     "ethers": "^6.14.3",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
->>>>>>> Stashed changes
     "lucide-react": "^0.511.0",
     "next": "^15.3.3",
     "qr": "^0.4.2",
