@@ -10,7 +10,7 @@ import "@/styles/list.css";
 import "@/styles/table.css";
 import "@/styles/button.css";
 
-// Blotter record used for table
+// Type for table display data
 type Blotter = {
   caseNumber: string;
   respondent: string;
@@ -18,7 +18,7 @@ type Blotter = {
   dateCreated: string;
 };
 
-// Full form structure for the PDF modal
+// Type for detailed data shown in PDF modal
 type BlotterFormData = {
   complainantName: string;
   complainantContact: string;
@@ -43,13 +43,14 @@ type BlotterFormData = {
 };
 
 export default function BlotterList() {
+  // States for search, pagination, and modal
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [selectedData, setSelectedData] = useState<BlotterFormData | null>(null);
   const recordsPerPage = 25;
 
-  // Hardcoded sample data from form structure
+  // Sample static data for demonstration
   const allBlotters: Blotter[] = [
     {
       caseNumber: "CASE-1001",
@@ -71,21 +72,31 @@ export default function BlotterList() {
     },
   ];
 
+  // Filter data based on search input across multiple fields
   const filteredBlotters = search.trim()
-    ? allBlotters.filter((b) =>
-      b.respondent.toLowerCase().includes(search.toLowerCase())
-    )
+    ? allBlotters.filter((b) => {
+        const lowerSearch = search.toLowerCase();
+        return (
+          b.caseNumber.toLowerCase().includes(lowerSearch) ||
+          b.respondent.toLowerCase().includes(lowerSearch) ||
+          b.incidentType.toLowerCase().includes(lowerSearch) ||
+          b.dateCreated.toLowerCase().includes(lowerSearch)
+        );
+      })
     : allBlotters;
 
+  // Pagination logic
   const totalPages = Math.ceil(filteredBlotters.length / recordsPerPage);
   const indexOfLast = currentPage * recordsPerPage;
   const indexOfFirst = indexOfLast - recordsPerPage;
   const currentBlotters = filteredBlotters.slice(indexOfFirst, indexOfLast);
 
+  // Handle 'View' button to display PDF modal with full data
   const handleView = (caseNumber: string) => {
     const record = allBlotters.find((b) => b.caseNumber === caseNumber);
     if (!record) return;
 
+    // Create mock full form data based on selected record
     const mockBlotterFormData: BlotterFormData = {
       complainantName: "Ana Reyes",
       complainantContact: "09123456789",
@@ -113,6 +124,7 @@ export default function BlotterList() {
     setShowPdfModal(true);
   };
 
+  // Reset the search and pagination
   const handleRefresh = () => {
     setSearch("");
     setCurrentPage(1);
@@ -121,11 +133,12 @@ export default function BlotterList() {
   return (
     <div className="blotter-container">
       <Navbar />
+
       <div className="blotter-wrapper">
         <div className="blotter-card">
           <h1 className="blotter-title">BLOTTER RECORDS</h1>
 
-          {/* Search Bar */}
+          {/* Search Section */}
           <label className="search-label">Search</label>
           <div className="search-bar">
             <div className="search-input-group">
@@ -137,6 +150,8 @@ export default function BlotterList() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+
+            {/* Add Blotter Button */}
             <Link href="/add">
               <button className="add-btn">
                 <i className="ri-add-line"></i> Add Blotter
@@ -149,7 +164,7 @@ export default function BlotterList() {
             ⟳ Refresh
           </button>
 
-          {/* Table */}
+          {/* Blotter Table */}
           <div className="table-wrapper">
             <div className="table-scroll">
               <table className="table">
@@ -194,7 +209,7 @@ export default function BlotterList() {
             </div>
           </div>
 
-          {/* Pagination */}
+          {/* Pagination Buttons */}
           <div className="pagination">
             <button
               className="pagination-btn"
@@ -223,7 +238,7 @@ export default function BlotterList() {
         </div>
       </div>
 
-      {/* PDF Modal */}
+      {/* PDF Modal View */}
       {showPdfModal && selectedData && (
         <BlotterPdfModal
           formData={selectedData}
@@ -232,7 +247,6 @@ export default function BlotterList() {
             setSelectedData(null);
           }}
         />
-
       )}
     </div>
   );
