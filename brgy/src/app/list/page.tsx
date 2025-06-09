@@ -75,14 +75,14 @@ export default function BlotterList() {
   // Filter data based on search input across multiple fields
   const filteredBlotters = search.trim()
     ? allBlotters.filter((b) => {
-        const lowerSearch = search.toLowerCase();
-        return (
-          b.caseNumber.toLowerCase().includes(lowerSearch) ||
-          b.respondent.toLowerCase().includes(lowerSearch) ||
-          b.incidentType.toLowerCase().includes(lowerSearch) ||
-          b.dateCreated.toLowerCase().includes(lowerSearch)
-        );
-      })
+      const lowerSearch = search.toLowerCase();
+      return (
+        b.caseNumber.toLowerCase().includes(lowerSearch) ||
+        b.respondent.toLowerCase().includes(lowerSearch) ||
+        b.incidentType.toLowerCase().includes(lowerSearch) ||
+        b.dateCreated.toLowerCase().includes(lowerSearch)
+      );
+    })
     : allBlotters;
 
   // Pagination logic
@@ -157,97 +157,99 @@ export default function BlotterList() {
                 <i className="ri-add-line"></i> Add Blotter
               </button>
             </Link>
-          </div>
+        </div>
 
-          {/* Refresh Button */}
-          <button className="refresh-btn" onClick={handleRefresh}>
-            ⟳ Refresh
-          </button>
+        {/* Refresh Button */}
+        <button className="refresh-btn" onClick={handleRefresh}>
+          ⟳ Refresh
+        </button>
 
-          {/* Blotter Table */}
-          <div className="table-wrapper">
-            <div className="table-scroll">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>No.</th>
-                    <th>Case Number</th>
-                    <th>Respondent</th>
-                    <th>Incident Type</th>
-                    <th>Date Created</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentBlotters.length > 0 ? (
-                    currentBlotters.map((blotter, index) => (
-                      <tr key={index}>
-                        <td>{indexOfFirst + index + 1}</td>
-                        <td>{blotter.caseNumber}</td>
-                        <td>{blotter.respondent}</td>
-                        <td>{blotter.incidentType}</td>
-                        <td>{blotter.dateCreated}</td>
-                        <td>
-                          <button
-                            className="action-btn"
-                            onClick={() => handleView(blotter.caseNumber)}
-                          >
-                            View
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={6} className="no-records">
-                        No blotter cases found.
+        {/* Blotter Table */}
+        <div className="table-wrapper">
+          <div className="table-scroll">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Case Number</th>
+                  <th>Respondent</th>
+                  <th>Incident Type</th>
+                  <th>Date Created</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentBlotters.length > 0 ? (
+                  currentBlotters.map((blotter, index) => (
+                    <tr key={index}>
+                      <td>{indexOfFirst + index + 1}</td>
+                      <td>{blotter.caseNumber}</td>
+                      <td>{blotter.respondent}</td>
+                      <td>{blotter.incidentType}</td>
+                      <td>{blotter.dateCreated}</td>
+                      <td>
+                        <button
+                          className="action-btn"
+                          onClick={() => handleView(blotter.caseNumber)}
+                        >
+                          View
+                        </button>
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Pagination Buttons */}
-          <div className="pagination">
-            <button
-              className="pagination-btn"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              <i className="ri-arrow-left-s-line"></i>
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                className={`pagination-btn ${currentPage === page ? "active" : ""}`}
-                onClick={() => setCurrentPage(page)}
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              className="pagination-btn"
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            >
-              <i className="ri-arrow-right-s-line"></i>
-            </button>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="no-records">
+                      No blotter cases found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
 
-      {/* PDF Modal View */}
-      {showPdfModal && selectedData && (
-        <BlotterPdfModal
-          formData={selectedData}
-          onClose={() => {
-            setShowPdfModal(false);
-            setSelectedData(null);
-          }}
-        />
-      )}
+        {/* Pagination Buttons */}
+        <div className="pagination">
+          <button
+            className="pagination-btn"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            <i className="ri-arrow-left-s-line"></i>
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              className={`pagination-btn ${currentPage === page ? "active" : ""}`}
+              onClick={() => setCurrentPage(page)}
+            >
+              {page}
+            </button>
+          ))}
+          <button
+            className="pagination-btn"
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            <i className="ri-arrow-right-s-line"></i>
+          </button>
+        </div>
+      </div>
     </div>
+
+      {/* PDF Modal View */ }
+  {
+    showPdfModal && selectedData && (
+      <BlotterPdfModal
+        formData={selectedData}
+        onClose={() => {
+          setShowPdfModal(false);
+          setSelectedData(null);
+        }}
+      />
+    )
+  }
+    </div >
   );
 }

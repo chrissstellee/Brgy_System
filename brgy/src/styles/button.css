@@ -11,10 +11,6 @@
   text-decoration: none;
 }
 
-.action-btn:hover {
-  color: #1a73e8;
-}
-
 .filter-btn,
 .add-btn {
   height: 2.25rem;
@@ -53,6 +49,11 @@
 
 .refresh-btn:hover {
   color: #4a4a4a;
+}
+
+.action-btn, 
+.add-btn:hover {
+  filter: brightness(1.1);
 }
 
 /* Form button */
