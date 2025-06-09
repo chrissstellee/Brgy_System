@@ -122,12 +122,12 @@ export default function AddBlotter() {
       }
     });
 
-    // incidentDate cannot be in the past
+    // incidentDate cannot be in the future
     if (
       formData.incidentDate &&
-      formData.incidentDate < getTodayDate()
+      formData.incidentDate > getTodayDate()
     ) {
-      newErrors.incidentDate = "Incident date cannot be in the past";
+      newErrors.incidentDate = "Incident date cannot be in the future";
     }
 
     // Age is required and cannot be 0 and more than 3 inputs
