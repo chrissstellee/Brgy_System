@@ -325,9 +325,9 @@ export default function AddBlotter() {
                   type="date"
                   name="incidentDate"
                   value={formData.incidentDate}
-                  min={getTodayDate()}
                   onChange={handleChange}
                   className={renderInputClass("incidentDate")}
+                  max={getTodayDate()}
                 />
                 {renderError("incidentDate")}
               </div>
