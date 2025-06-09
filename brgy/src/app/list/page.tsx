@@ -1,16 +1,16 @@
-"use client"; // Enables client-side rendering in Next.js
+"use client";
 
-// Import necessary modules
 import Link from "next/link";
 import { useState } from "react";
 import Navbar from "@/components/admin";
+import BlotterPdfModal from "@/components/view";
 
-// Import styles
+// Styles
 import "@/styles/list.css";
 import "@/styles/table.css";
 import "@/styles/button.css";
 
-// Define the structure of a Blotter record
+// Blotter record used for table
 type Blotter = {
   caseNumber: string;
   respondent: string;
@@ -18,39 +18,101 @@ type Blotter = {
   dateCreated: string;
 };
 
+// Full form structure for the PDF modal
+type BlotterFormData = {
+  complainantName: string;
+  complainantContact: string;
+  complainantAge: string;
+  complainantAddress: string;
+  respondentName: string;
+  respondentContact: string;
+  respondentAge: string;
+  respondentAddress: string;
+  incidentType: string;
+  natureOfComplaint: string;
+  incidentDate: string;
+  incidentTime: string;
+  incidentLocation: string;
+  summary: string;
+  complainantStatement: string;
+  witnessName: string;
+  witnessContact: string;
+  witnessAge: string;
+  witnessAddress: string;
+  witnessStatement: string;
+};
+
 export default function BlotterList() {
-  // State for search input and current pagination page
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 25; // Number of records per page
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [selectedData, setSelectedData] = useState<BlotterFormData | null>(null);
+  const recordsPerPage = 25;
 
-  // Generate dummy data for demonstration
-  const allBlotters: Blotter[] = Array.from({ length: 100 }, (_, i) => ({
-    caseNumber: `CASE-${1000 + i}`,
-    respondent: `Respondent ${i + 1}`,
-    incidentType: i % 3 === 0 ? "Theft" : i % 3 === 1 ? "Assault" : "Dispute",
-    dateCreated: new Date(Date.now() - i * 86400000).toLocaleDateString(), // Decrement by 1 day
-  }));
+  // Hardcoded sample data from form structure
+  const allBlotters: Blotter[] = [
+    {
+      caseNumber: "CASE-1001",
+      respondent: "Juan Dela Cruz",
+      incidentType: "Theft",
+      dateCreated: "2024-06-01",
+    },
+    {
+      caseNumber: "CASE-1002",
+      respondent: "Maria Santos",
+      incidentType: "Assault",
+      dateCreated: "2024-06-02",
+    },
+    {
+      caseNumber: "CASE-1003",
+      respondent: "Pedro Reyes",
+      incidentType: "Dispute",
+      dateCreated: "2024-06-03",
+    },
+  ];
 
-  // Filter records based on the search input
   const filteredBlotters = search.trim()
     ? allBlotters.filter((b) =>
-        b.respondent.toLowerCase().includes(search.toLowerCase())
-      )
+      b.respondent.toLowerCase().includes(search.toLowerCase())
+    )
     : allBlotters;
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredBlotters.length / recordsPerPage);
   const indexOfLast = currentPage * recordsPerPage;
   const indexOfFirst = indexOfLast - recordsPerPage;
   const currentBlotters = filteredBlotters.slice(indexOfFirst, indexOfLast);
 
-  // View button click handler (mock action)
   const handleView = (caseNumber: string) => {
-    alert(`Viewing details for ${caseNumber}`);
+    const record = allBlotters.find((b) => b.caseNumber === caseNumber);
+    if (!record) return;
+
+    const mockBlotterFormData: BlotterFormData = {
+      complainantName: "Ana Reyes",
+      complainantContact: "09123456789",
+      complainantAge: "28",
+      complainantAddress: "Barangay 123, Manila",
+      respondentName: record.respondent,
+      respondentContact: "09998887777",
+      respondentAge: "35",
+      respondentAddress: "Barangay 456, Manila",
+      incidentType: record.incidentType,
+      natureOfComplaint: "Verbal Threat",
+      incidentDate: record.dateCreated,
+      incidentTime: "14:30",
+      incidentLocation: "Market Area",
+      summary: "Verbal altercation occurred near the market.",
+      complainantStatement: "I was shouted at and threatened by the respondent.",
+      witnessName: "Mark Cruz",
+      witnessContact: "09112223344",
+      witnessAge: "33",
+      witnessAddress: "Barangay 789, Manila",
+      witnessStatement: "I saw the incident while walking nearby.",
+    };
+
+    setSelectedData(mockBlotterFormData);
+    setShowPdfModal(true);
   };
 
-  // Refresh button resets search and page
   const handleRefresh = () => {
     setSearch("");
     setCurrentPage(1);
@@ -58,12 +120,12 @@ export default function BlotterList() {
 
   return (
     <div className="blotter-container">
-      <Navbar /> {/* Top navigation bar */}
+      <Navbar />
       <div className="blotter-wrapper">
         <div className="blotter-card">
           <h1 className="blotter-title">BLOTTER RECORDS</h1>
 
-          {/* Search Bar Section */}
+          {/* Search Bar */}
           <label className="search-label">Search</label>
           <div className="search-bar">
             <div className="search-input-group">
@@ -75,10 +137,6 @@ export default function BlotterList() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-
-            {/* Filter button removed */}
-
-            {/* Add Blotter Button */}
             <Link href="/add">
               <button className="add-btn">
                 <i className="ri-add-line"></i> Add Blotter
@@ -91,7 +149,7 @@ export default function BlotterList() {
             ⟳ Refresh
           </button>
 
-          {/* Table Displaying Blotter Data */}
+          {/* Table */}
           <div className="table-wrapper">
             <div className="table-scroll">
               <table className="table">
@@ -125,7 +183,6 @@ export default function BlotterList() {
                       </tr>
                     ))
                   ) : (
-                    // Message for no search results
                     <tr>
                       <td colSpan={6} className="no-records">
                         No blotter cases found.
@@ -137,9 +194,8 @@ export default function BlotterList() {
             </div>
           </div>
 
-          {/* Pagination Controls */}
+          {/* Pagination */}
           <div className="pagination">
-            {/* Previous Button */}
             <button
               className="pagination-btn"
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -147,8 +203,6 @@ export default function BlotterList() {
             >
               <i className="ri-arrow-left-s-line"></i>
             </button>
-
-            {/* Page Buttons */}
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
@@ -158,13 +212,9 @@ export default function BlotterList() {
                 {page}
               </button>
             ))}
-
-            {/* Next Button */}
             <button
               className="pagination-btn"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
             >
               <i className="ri-arrow-right-s-line"></i>
@@ -172,6 +222,18 @@ export default function BlotterList() {
           </div>
         </div>
       </div>
+
+      {/* PDF Modal */}
+      {showPdfModal && selectedData && (
+        <BlotterPdfModal
+          formData={selectedData}
+          onClose={() => {
+            setShowPdfModal(false);
+            setSelectedData(null);
+          }}
+        />
+
+      )}
     </div>
   );
 }

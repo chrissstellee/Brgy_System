@@ -4,7 +4,8 @@ import BlotterPdfDocument from "@/app/add/pdf";
 import "@/styles/pdf.css";
 import "@/styles/modal.css";
 
-type FormData = {
+// ✅ Renamed from FormData to BlotterFormData
+type BlotterFormData = {
   complainantName: string;
   complainantContact: string;
   complainantAge: string;
@@ -28,7 +29,7 @@ type FormData = {
 };
 
 interface BlotterPdfModalProps {
-  formData: FormData;
+  formData: BlotterFormData;
   onClose: () => void;
 }
 
@@ -91,14 +92,13 @@ const BlotterPdfModal: React.FC<BlotterPdfModalProps> = ({ formData, onClose }) 
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h2 className="modal-title">Blotter Report Preview</h2>
+          <h2 className="modal-title">View Blotter Report</h2>
           <button onClick={onClose} className="close-button">&times;</button>
         </div>
 
         <div className="modal-body" ref={printRef}>
           <BlotterPdfDocument formData={formData} />
         </div>
-
       </div>
     </div>
   );
