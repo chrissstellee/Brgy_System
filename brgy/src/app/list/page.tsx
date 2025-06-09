@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 // Import
@@ -51,59 +50,149 @@ function ReportDetailsModal({ open, onClose, report }: ReportDetailsModalProps) 
   const [wName, wContact, wAge, wAddress, wStatement] = splitSection(report.witnessInfo);
 
   return (
-    <div className="modal-overlay" style={{
-      position: "fixed",
-      top: 0, left: 0, right: 0, bottom: 0,
-      background: "rgba(0,0,0,0.6)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      zIndex: 1000
-    }}>
-      <div className="modal-content" style={{
-        background: "#fff",
-        borderRadius: "1rem",
-        padding: "2rem",
-        maxWidth: 500,
-        width: "100%",
-        boxShadow: "0 2px 16px rgba(0,0,0,0.25)",
-        position: "relative"
-      }}>
-        <button onClick={onClose} style={{
-          position: "absolute", top: 16, right: 24, fontWeight: "bold", fontSize: 24, background: "none", border: "none", cursor: "pointer"
-        }}>×</button>
-        <h2 className="form-title" style={{ marginBottom: 16 }}>Report Details</h2>
-        <div>
-          <h4>Complainant Info</h4>
-          <div>Name: {cName}</div>
-          <div>Contact: {cContact}</div>
-          <div>Age: {cAge}</div>
-          <div>Address: {cAddress}</div>
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <h4>Respondent Info</h4>
-          <div>Name: {rName}</div>
-          <div>Contact: {rContact}</div>
-          <div>Age: {rAge}</div>
-          <div>Address: {rAddress}</div>
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <h4>Incident Details</h4>
-          <div>Type: {report.incidentType}</div>
-          <div>Nature: {report.natureOfComplaint}</div>
-          <div>Date: {report.date}</div>
-          <div>Time: {report.time}</div>
-          <div>Location: {report.location}</div>
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <h4>Statements</h4>
-          <div>Summary: {report.summaryOfIncident}</div>
-          <div>Complainant Statement: {report.complainantStatement}</div>
-          <div>Witness: {wName || "-"}, Contact: {wContact || "-"}</div>
-          <div>Witness Statement: {wStatement || "-"}</div>
+    <div
+      className="modal-overlay"
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(20, 20, 20, 0.55)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+        backdropFilter: "blur(2px)",
+      }}
+    >
+      <div
+        className="modal-content"
+        style={{
+          background: "#fff",
+          borderRadius: "1.5rem",
+          padding: "2.5rem 2rem 1.8rem 2rem",
+          maxWidth: 520,
+          width: "100%",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
+          position: "relative",
+          fontFamily: "inherit",
+        }}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          style={{
+            position: "absolute",
+            top: 24,
+            right: 28,
+            background: "none",
+            border: "none",
+            fontSize: 26,
+            color: "#888",
+            cursor: "pointer",
+            fontWeight: 700,
+            transition: "color .2s",
+          }}
+          onMouseOver={e => (e.currentTarget.style.color = "#c03")}
+          onMouseOut={e => (e.currentTarget.style.color = "#888")}
+        >
+          ×
+        </button>
+        <h2
+          style={{
+            textAlign: "center",
+            marginBottom: "1.2rem",
+            fontWeight: 700,
+            fontSize: "1.5rem",
+            letterSpacing: "-.5px",
+            color: "#c03",
+          }}
+        >
+          Blotter Report Details
+        </h2>
+        <div style={{ marginBottom: 18 }}>
+          <div
+            style={{
+              background: "#f9f9fb",
+              borderRadius: 12,
+              padding: "1rem 1.5rem",
+              marginBottom: 15,
+              border: "1px solid #ececec",
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: "1.1rem", marginBottom: 8, color: "#2a2b3c" }}>Complainant</div>
+            <div><b>Name:</b> {cName}</div>
+            <div><b>Contact:</b> {cContact}</div>
+            <div><b>Age:</b> {cAge}</div>
+            <div><b>Address:</b> {cAddress}</div>
+          </div>
+          <div
+            style={{
+              background: "#f9f9fb",
+              borderRadius: 12,
+              padding: "1rem 1.5rem",
+              marginBottom: 15,
+              border: "1px solid #ececec",
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: "1.1rem", marginBottom: 8, color: "#2a2b3c" }}>Respondent</div>
+            <div><b>Name:</b> {rName}</div>
+            <div><b>Contact:</b> {rContact}</div>
+            <div><b>Age:</b> {rAge}</div>
+            <div><b>Address:</b> {rAddress}</div>
+          </div>
+          <div
+            style={{
+              background: "#f9f9fb",
+              borderRadius: 12,
+              padding: "1rem 1.5rem",
+              marginBottom: 15,
+              border: "1px solid #ececec",
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: "1.1rem", marginBottom: 8, color: "#2a2b3c" }}>Incident</div>
+            <div><b>Type:</b> {report.incidentType}</div>
+            <div><b>Nature:</b> {report.natureOfComplaint}</div>
+            <div><b>Date:</b> {report.date}</div>
+            <div><b>Time:</b> {report.time}</div>
+            <div><b>Location:</b> {report.location}</div>
+          </div>
+          <div
+            style={{
+              background: "#f9f9fb",
+              borderRadius: 12,
+              padding: "1rem 1.5rem",
+              marginBottom: 15,
+              border: "1px solid #ececec",
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: "1.1rem", marginBottom: 8, color: "#2a2b3c" }}>Statements</div>
+            <div><b>Summary:</b> <span style={{ color: "#484a60" }}>{report.summaryOfIncident}</span></div>
+            <div><b>Complainant Statement:</b> <span style={{ color: "#484a60" }}>{report.complainantStatement}</span></div>
+            <div style={{ marginTop: 12, marginBottom: 5, fontWeight: 600 }}>Witness</div>
+            <div><b>Name:</b> {wName || "-"}</div>
+            <div><b>Contact:</b> {wContact || "-"}</div>
+            <div><b>Age:</b> {wAge || "-"}</div>
+            <div><b>Address:</b> {wAddress || "-"}</div>
+            <div><b>Statement:</b> <span style={{ color: "#484a60" }}>{wStatement || "-"}</span></div>
+          </div>
+          <div
+            style={{
+              fontSize: ".95rem",
+              color: "#999",
+              textAlign: "right",
+              marginTop: "1rem",
+            }}
+          >
+            Submitted by: <span style={{ color: "#6a5acd" }}>{report.reporter.slice(0, 7)}...{report.reporter.slice(-5)}</span>
+            <br />
+            <span>On: {report.timestamp}</span>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
 
 export default function BlotterList() {
   const [search, setSearch] = useState("");
