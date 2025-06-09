@@ -7,6 +7,8 @@ import { useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 
+import "@/styles/navbar.css";
+
 export default function Navbar() {
   const { isConnected } = useAccount();
   const router = useRouter();
@@ -19,11 +21,11 @@ export default function Navbar() {
   }, [isConnected, router]);
 
   return (
-    <nav className="w-full bg-[var(--color-primary)] text-[var(--color-text-secondary)] px-6 py-2 flex justify-between items-center shadow-md">
-      <div className="flex items-center">
-        <Image src="/favicon.svg" alt="BEIS logo" width={50} height={50} />
-        <span className="font-bold text-lg ml-[10%]">BEIS</span>
-      </div>
+    <nav className="navbar">
+          <div className="navbar-logo">
+            <Image src="/favicon.svg" alt="BEIS logo" width={50} height={50} />
+            <span className="navbar-title">BEIS</span>
+          </div>
 
       {/* RainbowKit Wallet Connect / Disconnect Button */}
       <ConnectButton showBalance={false} />

@@ -1,0 +1,178 @@
+/* -------------------------------------- */
+/* Layout Wrappers                        */
+/* -------------------------------------- */
+
+/* Centers the content on the page */
+.content-wrapper {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem 1rem;
+}
+
+/* Card-style container for the form content */
+.form-container {
+  background-color: #fff;
+  padding: 2rem;
+  margin: 1rem 2rem;
+  max-width: 80rem;
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main form section wrapper */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* -------------------------------------- */
+/* Typography Styles                      */
+/* -------------------------------------- */
+
+/* Main form title */
+.form-title {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Section headers (A. Complainant Information, B. Respondent Information, etc.) */
+.section-heading {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+
+/* Form label styling */
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  color: #374151;
+}
+
+/* -------------------------------------- */
+/* Form Grid Layout                       */
+/* -------------------------------------- */
+
+/* Creates a responsive 4-column grid */
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+/* Form group wrapper */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Column span utility for 2 and 4 columns */
+.col-span-2 {
+  grid-column: span 2;
+}
+
+.col-span-4 {
+  grid-column: span 4;
+}
+
+/* Top margin utility classes */
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mt-5 {
+  margin-top: 1.25rem;
+}
+
+.mt-6 {
+  margin-top: 1.5rem;
+}
+
+/* -------------------------------------- */
+/* Inputs & Textareas                     */
+/* -------------------------------------- */
+
+/* Input style shared across text, number, date, time */
+.custom-input {
+  padding: 0.60rem 1rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--color-table);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s ease-in-out;
+  background-color: #fff;
+}
+
+/* Focus state for inputs
+.custom-input:focus {
+  border-color: rgba(var(--color-primary-rgb), 0.6);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+} */
+
+/* Multiline input (textarea) */
+.custom-textarea {
+  padding: 0.60rem 1rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--color-table);
+  border-radius: 8px;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s ease-in-out;
+  background-color: #fff;
+  font-family: inherit;
+}
+
+/* Focus state for textareas
+.custom-textarea:focus {
+  border-color: rgba(var(--color-primary-rgb), 0.6);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.1);
+} */
+
+/* -------------------------------------- */
+/* Responsive Behavior                    */
+/* -------------------------------------- */
+
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 1rem 0.5rem;
+  }
+  
+  .form-container {
+    padding: 1.5rem;
+  }
+  
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .col-span-2,
+  .col-span-4 {
+    grid-column: span 1;
+  }
+
+}
+
+@media (max-width: 1024px) {
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .col-span-2 {
+    grid-column: span 2;
+  }
+  
+  .col-span-4 {
+    grid-column: span 2;
+  }
+}

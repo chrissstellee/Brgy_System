@@ -1,0 +1,89 @@
+/* pdf-preview.css */
+
+.pdf-document {
+  width: 100%;
+  max-width: 800px;
+  margin: auto;
+  padding: 40px;
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+  color: #000;
+  background: #fff;
+}
+
+.form-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.form-header p {
+  margin: 0.25rem 0;
+}
+
+.section-title {
+  font-weight: bold;
+  font-size: 16px;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #000;
+  padding-bottom: 4px;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.form-row label {
+  flex: 1 1 200px;
+  font-weight: bold;
+}
+
+.form-row span {
+  flex: 2 1 300px;
+  border-bottom: 1px solid #000;
+  padding-bottom: 2px;
+}
+
+textarea,
+.custom-textarea {
+  width: 100%;
+  border: 1px solid #000;
+  min-height: 80px;
+  padding: 6px;
+  margin-bottom: 1rem;
+  resize: vertical;
+}
+
+.signature-section {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+.signature-box {
+  text-align: center;
+  width: 45%;
+}
+
+.signature-box p {
+  margin-top: 2rem;
+  border-top: 1px solid #000;
+  padding-top: 4px;
+}
+
+.footer-note {
+  text-align: center;
+  font-style: italic;
+  margin-top: 3rem;
+  font-size: 13px;
+}

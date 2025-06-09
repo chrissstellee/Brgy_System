@@ -1,0 +1,29 @@
+.input-error {
+  border: 1px solid var(--color-red); /* red border for error */
+  
+}
+
+/* Base style for error text */
+.error-text {
+  color: var(--color-red);
+  font-size: 0.5rem; 
+  margin-top: 4px;
+  padding-left: 5px;
+  /* font-style: italic; */
+}
+
+/* Medium screen (tablets) and up */
+@media (min-width: 640px) {
+  .error-text {
+    font-size: 0.75rem; /* 12px */
+    padding-left: 6px;
+  }
+}
+
+/* Large screen (desktop) and up */
+@media (min-width: 1024px) {
+  .error-text {
+    font-size: 0.875rem; /* 14px */
+    padding-left: 8px;
+  }
+}

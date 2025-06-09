@@ -1,0 +1,23 @@
+.image {
+  max-width: 100%;
+  height: auto;
+}
+
+.title {
+  font-size: 1.125rem; /* text-lg */
+  font-weight: bold;
+}
+
+.subtitle {
+  font-size: 0.75rem; /* text-xs */
+}
+
+@media (min-width: 640px) {
+  .title {
+    font-size: 1.5rem; /* sm:text-2xl */
+  }
+
+  .subtitle {
+    font-size: 0.875rem; /* sm:text-sm */
+  }
+}
