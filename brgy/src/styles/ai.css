@@ -1,0 +1,122 @@
+/* AI Summary Section Styles */
+.ai-summary-section {
+  margin-bottom: 1.5rem;
+  padding: 2rem;
+  background-color: white;
+  /* border: 1px solid #e9ecef; */
+  border-radius: 8px;
+}
+
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.summary-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.loading-indicator {
+  font-size: 0.875rem;
+  color: #6c757d;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loading-indicator::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border: 2px solid #6c757d;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.ai-summary-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  background-color: #ffffff;
+  color: #495057;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.ai-summary-textarea[readonly] {
+  background-color: var(--color-bg);
+  cursor: default;
+}
+
+.error-message {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #f8d7da;
+  color: var(--color-red);
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.error-message::before {
+  content: '⚠️';
+  font-size: 1rem;
+}
+
+.debug-info {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  /* background-color: var; */
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.75rem;
+  color: #495057;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ai-summary-section {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .summary-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .loading-indicator {
+    font-size: 0.8rem;
+  }
+  
+  .ai-summary-textarea {
+    min-height: 100px;
+    font-size: 0.85rem;
+  }
+}

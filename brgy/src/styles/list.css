@@ -37,9 +37,11 @@
 
 /* For search bar */
 .search-label {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  font-weight: 500;
+  margin-bottom: 0.3rem;
   display: block;
+  color: var(--color-table);
+  font-size: 0.85rem;
 }
 
 .search-bar {

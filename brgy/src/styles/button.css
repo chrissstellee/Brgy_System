@@ -8,10 +8,7 @@
   color: var(--color-bg-secondary);
   font-size: 12px;
   font-weight: 500;
-}
-
-.action-btn:hover {
-  color: #1a73e8;
+  text-decoration: none;
 }
 
 .filter-btn,
@@ -52,6 +49,11 @@
 
 .refresh-btn:hover {
   color: #4a4a4a;
+}
+
+.action-btn, 
+.add-btn:hover {
+  filter: brightness(1.1);
 }
 
 /* Form button */
@@ -117,4 +119,48 @@
   .button {
     width: 100%;
   }
+}
+
+
+/* PDF modal */
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-gray {
+  background-color: #d1d5db;
+}
+
+.btn-gray:hover {
+  background-color: #9ca3af;
+}
+
+.btn-blue {
+  background-color: var(--color-dark-blue);
+  color: white;
+}
+
+.btn-blue:hover {
+  background-color: var(--color-primary);
+}
+
+.btn-green {
+  background-color: var(--color-green);
+  color: white;
+}
+
+.btn-green:hover {
+  background-color: var(--color-green);
 }
