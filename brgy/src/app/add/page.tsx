@@ -407,7 +407,7 @@ export default function AddBlotter() {
                   type="date"
                   name="incidentDate"
                   value={formData.incidentDate}
-                  min={getTodayDate()}
+                  max={getTodayDate()}
                   onChange={handleChange}
                   className={renderInputClass("incidentDate")}
                 />
