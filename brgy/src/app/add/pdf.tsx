@@ -55,11 +55,9 @@ const BlotterPdfDocument: React.FC<{ formData: BlotterFormData }> = ({ formData 
     witnessAddress,
     witnessStatement,
     complainantStatement,
-    remarks,
     report,
   } = formData;
 
-  // Helper to display "N/A" if the field is empty
   const display = (value: string | undefined | null) => value?.trim() || "N/A";
 
   return (
@@ -151,10 +149,9 @@ const BlotterPdfDocument: React.FC<{ formData: BlotterFormData }> = ({ formData 
       </div>
 
       <h2 className="section-title">Remarks</h2>
-<div className="form-row">
-  <span>{display(report.remarks)}</span>
-</div>
-
+      <div className="form-row">
+        <span>{display(report.remarks)}</span>
+      </div>
 
       <div className="signature-section">
         <div className="signature-box">
