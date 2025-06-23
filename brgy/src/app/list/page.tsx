@@ -37,6 +37,7 @@ type Report = {
   witnessInfo: string;
   timestamp: string;
   status: number; // <--- updated from string to number
+  remarks: string;
 };
 
 function splitSection(section: string) {
@@ -112,6 +113,7 @@ export default function BlotterList() {
             timestamp: new Date(Number(r.timestamp) * 1000).toLocaleString(),
 
             status: Number(r.status), // <--- get status as number from contract
+            remarks: r.remarks,
           });
         }
         setAllBlotters(items.reverse()); // newest first

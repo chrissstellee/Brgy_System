@@ -16,6 +16,7 @@ export type Report = {
   complainantStatement: string;
   witnessInfo: string;
   timestamp: string;
+  remarks: string;
 };
 
 export type BlotterFormData = {
@@ -34,6 +35,7 @@ export type BlotterFormData = {
   witnessStatement: string;
   complainantStatement: string;
   summary?: string;
+  remarks: string;
   report: Report;
 };
 
@@ -53,6 +55,7 @@ const BlotterPdfDocument: React.FC<{ formData: BlotterFormData }> = ({ formData 
     witnessAddress,
     witnessStatement,
     complainantStatement,
+    remarks,
     report,
   } = formData;
 
@@ -63,7 +66,7 @@ const BlotterPdfDocument: React.FC<{ formData: BlotterFormData }> = ({ formData 
     <div className="pdf-document">
       <h1 className="form-title">Barangay Blotter Report</h1>
       <div className="form-header">
-        <p>123 Brgy. Maginhawa, Rodriguez, Rizal</p>
+        <p>123 Brgy. Burgos, Rodriguez, Rizal</p>
         <p>09123456789 | 02-1234-5678</p>
       </div>
 
@@ -146,6 +149,12 @@ const BlotterPdfDocument: React.FC<{ formData: BlotterFormData }> = ({ formData 
       <div className="form-row">
         <span>{display(witnessStatement)}</span>
       </div>
+
+      <h2 className="section-title">Remarks</h2>
+<div className="form-row">
+  <span>{display(report.remarks)}</span>
+</div>
+
 
       <div className="signature-section">
         <div className="signature-box">

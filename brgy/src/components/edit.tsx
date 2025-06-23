@@ -114,6 +114,7 @@ const ReportDetailsModal = ({ open, onClose, report }: ReportDetailsModalProps) 
         icon: "success",
         title: "Update Submitted",
         text: "Blotter report status has been successfully updated on blockchain.",
+        confirmButtonColor: "#1A3A6D",
       });
 
       onClose(); // Close modal on success

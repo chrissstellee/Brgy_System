@@ -27,6 +27,7 @@ type Report = {
   witnessInfo: string;
   timestamp: string;
   txHash?: string; // <-- NEW
+  remarks: string;
 };
 
 type ReportDetailsModalProps = {
@@ -56,6 +57,7 @@ type BlotterFormData = {
   witnessStatement: string;
   complainantStatement: string;
   summary?: string;
+  remarks: string;
   report: Report;
 };
 
@@ -105,6 +107,7 @@ const ReportDetailsModal = ({ open, onClose, report }: ReportDetailsModalProps) 
     witnessStatement: wStatement,
     complainantStatement: report.complainantStatement,
     summary: report.summaryOfIncident,
+    remarks: report.remarks,
     report,
   };
 
@@ -121,19 +124,21 @@ const BlotterPdfModal: React.FC<BlotterPdfModalProps> = ({ formData, onClose }) 
   const [retryCount, setRetryCount] = useState<number>(0);
 
   // --- AI Summary Generator ---
-  const fetchSummary = async (isRetry = false) => {
-    if (isRetry && retryCount >= MAX_RETRIES) {
-      setError("Maximum retry attempts reached.");
-      setIsGenerating(false);
-      return;
-    }
+ // Replace the fetchSummary function in your view.tsx with this improved version:
 
-    setRetryCount((prev) => (isRetry ? prev + 1 : 0));
-    setIsGenerating(true);
-    setError("");
-    setDebugInfo("");
+const fetchSummary = async (isRetry = false) => {
+  if (isRetry && retryCount >= MAX_RETRIES) {
+    setError("Maximum retry attempts reached.");
+    setIsGenerating(false);
+    return;
+  }
 
-    const prompt = `
+  setRetryCount((prev) => (isRetry ? prev + 1 : 0));
+  setIsGenerating(true);
+  setError("");
+  setDebugInfo("");
+
+  const prompt = `
 Please create a professional police blotter summary in a single, coherent paragraph. Use formal, objective language and include all key details:
 
 INCIDENT DETAILS:
@@ -152,39 +157,78 @@ COMPLAINT DETAILS:
 
 ${formData.witnessName ? `- Witness: ${formData.witnessName}, Age ${formData.witnessAge}` : ""}
 ${formData.witnessStatement ? `- Witness Statement: ${formData.witnessStatement}` : ""}
-    `.trim();
+  `.trim();
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-      const response = await fetch("/api/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-        signal: controller.signal,
-      });
+    console.log("🚀 Making AI API request...");
+    
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+      signal: controller.signal,
+    });
 
-      clearTimeout(timeoutId);
-      const data: ApiResponse = await response.json();
+    clearTimeout(timeoutId);
+    
+    console.log("📡 Response status:", response.status);
+    console.log("📡 Response ok:", response.ok);
 
-      if (data.error) throw new Error(data.error);
-      if (!data.result?.trim()) throw new Error("Empty AI response.");
-
-      setAiSummary(data.result.trim());
-      setDebugInfo("✅ AI summary generated successfully.");
-    } catch (err: any) {
-      console.error("[AI Summary Error]", err);
-      setError(`⚠️ ${err.message || "Unknown error occurred"}`);
-      const fallback =
-        formData.summary?.trim() ||
-        `Incident involving ${formData.complainantName} and ${formData.respondentName} on ${formData.incidentDate}. Complaint: ${formData.natureOfComplaint}.`;
-
-      setAiSummary(fallback);
-    } finally {
-      setIsGenerating(false);
+    // Check if response is ok first
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-  };
+
+    const data: ApiResponse = await response.json();
+    console.log("📦 API Response:", data);
+
+    // More detailed error handling
+    if (data.error) {
+      throw new Error(`API Error: ${data.error}${data.details ? ` - ${data.details}` : ''}`);
+    }
+    
+    if (!data.result?.trim()) {
+      throw new Error("Empty AI response received");
+    }
+
+    setAiSummary(data.result.trim());
+    setDebugInfo("✅ AI summary generated successfully.");
+    
+  } catch (err: any) {
+    console.error("[AI Summary Error]", err);
+    
+    // More specific error messages
+    let errorMessage = "Unknown error occurred";
+    
+    if (err.name === 'AbortError') {
+      errorMessage = "Request timed out (30s)";
+    } else if (err.message.includes('fetch')) {
+      errorMessage = "Network error - check your connection";
+    } else if (err.message.includes('HTTP')) {
+      errorMessage = `Server error: ${err.message}`;
+    } else if (err.message.includes('API Error')) {
+      errorMessage = err.message;
+    } else {
+      errorMessage = err.message || "Unexpected error";
+    }
+    
+    setError(`⚠️ ${errorMessage}`);
+    
+    // Always provide fallback summary
+    const fallback =
+      formData.summary?.trim() ||
+      `Incident involving ${formData.complainantName} and ${formData.respondentName} on ${formData.incidentDate}. Complaint: ${formData.natureOfComplaint}.`;
+
+    setAiSummary(fallback);
+    setDebugInfo(`🔄 Using fallback summary due to error: ${errorMessage}`);
+    
+  } finally {
+    setIsGenerating(false);
+  }
+};
 
   useEffect(() => {
     fetchSummary();
@@ -278,12 +322,14 @@ ${formData.witnessStatement ? `- Witness Statement: ${formData.witnessStatement}
           <BlotterPdfDocument
             formData={{
               ...formData,
+              remarks: formData.report.remarks || "", // ✅ Add this line
               report: {
                 ...formData.report,
                 summaryOfIncident: formData.summary || "N/A",
               },
             }}
           />
+
         </div>
 
         {/* Footer with PDF Download Button and Blockchain Link */}
