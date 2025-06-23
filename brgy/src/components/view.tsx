@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
@@ -24,6 +26,7 @@ type Report = {
   complainantStatement: string;
   witnessInfo: string;
   timestamp: string;
+  txHash?: string; // <-- NEW
 };
 
 type ReportDetailsModalProps = {
@@ -185,6 +188,7 @@ ${formData.witnessStatement ? `- Witness Statement: ${formData.witnessStatement}
 
   useEffect(() => {
     fetchSummary();
+    // eslint-disable-next-line
   }, [formData]);
 
   const handleRetry = () => fetchSummary(true);
@@ -200,6 +204,7 @@ ${formData.witnessStatement ? `- Witness Statement: ${formData.witnessStatement}
     };
     document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
+    // eslint-disable-next-line
   }, [isGenerating]);
 
   // --- PDF Download Handler ---
@@ -243,6 +248,11 @@ ${formData.witnessStatement ? `- Witness Statement: ${formData.witnessStatement}
     }
   };
 
+  // Get base scan url (use Sepolia for testnet, Mainnet for main)
+  const baseScanUrl = formData.report.txHash
+    ? `https://sepolia.basescan.org/tx/${formData.report.txHash}`
+    : "";
+
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && handleClose()}>
       <div className="modal-content">
@@ -276,9 +286,22 @@ ${formData.witnessStatement ? `- Witness Statement: ${formData.witnessStatement}
           />
         </div>
 
-        {/* Footer with PDF Download Button */}
+        {/* Footer with PDF Download Button and Blockchain Link */}
         <div className="modal-footer">
           <button onClick={handleDownload} className="btn btn-blue">Download PDF</button>
+          {formData.report.txHash && (
+            <div style={{ marginTop: "1rem", textAlign: "center" }}>
+              <a
+                href={baseScanUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-green"
+                style={{ marginLeft: "1rem", textDecoration: "none" }}
+              >
+                View Blockchain Transaction
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>

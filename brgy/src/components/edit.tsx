@@ -1,7 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/rules-of-hooks */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useState } from "react";
 import Swal from "sweetalert2";
+import { ethers } from "ethers";
+import ReportSystemABI from "@/lib/ReportSystemABI.json";
 
 import "@/styles/form.css";
 import "@/styles/container.css";
@@ -26,6 +31,7 @@ type Report = {
   complainantStatement: string;
   witnessInfo: string;
   timestamp: string;
+  status?: number; // <--- now numeric
 };
 
 type ReportDetailsModalProps = {
@@ -35,70 +41,41 @@ type ReportDetailsModalProps = {
 };
 
 type BlotterFormData = {
-  incidentType: string;
-  incidentDate: string;
-  incidentTime: string;
-  incidentLocation: string;
-  natureOfComplaint: string;
-  complainantName: string;
-  complainantContact: string;
-  complainantAge: string;
-  complainantAddress: string;
-  respondentName: string;
-  respondentContact: string;
-  respondentAge: string;
-  respondentAddress: string;
-  witnessName: string;
-  witnessContact: string;
-  witnessAge: string;
-  witnessAddress: string;
-  witnessStatement: string;
-  complainantStatement: string;
-  summary?: string;
-  report: Report;
   status: string;
-  caseNumber: string;
   remarks: string;
 };
 
 // Utility to split pipe-delimited fields
 const splitSection = (section: string) => section.split("|");
 
+// Status options for mapping
+const STATUS_OPTIONS = [
+  { value: "0", label: "Pending" },
+  { value: "1", label: "Resolved" },
+  { value: "2", label: "Revoked" },
+  { value: "3", label: "Dismissed" },
+];
+
+// For mapping from enum number to text (optional)
+function statusLabelFromNumber(statusNum: number) {
+  return STATUS_OPTIONS.find(opt => opt.value === String(statusNum))?.label || "Unknown";
+}
+
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_DEPLOYED_CONTRACT_ADDRESS || "";
+
 const ReportDetailsModal = ({ open, onClose, report }: ReportDetailsModalProps) => {
   if (!open || !report) return null;
 
-  const [cName, cContact, cAge, cAddress] = splitSection(report.complainantInfo);
-  const [rName, rContact, rAge, rAddress] = splitSection(report.respondentInfo);
-  const [wName, wContact, wAge, wAddress, wStatement] = splitSection(report.witnessInfo);
+  // Default status value as string (from numeric)
+  const defaultStatus = typeof report.status === "number" ? String(report.status) : "";
 
   const [formData, setFormData] = useState<BlotterFormData>({
-    incidentType: report.incidentType,
-    incidentDate: report.date,
-    incidentTime: report.time,
-    incidentLocation: report.location,
-    natureOfComplaint: report.natureOfComplaint,
-    complainantName: cName,
-    complainantContact: cContact,
-    complainantAge: cAge,
-    complainantAddress: cAddress,
-    respondentName: rName,
-    respondentContact: rContact,
-    respondentAge: rAge,
-    respondentAddress: rAddress,
-    witnessName: wName,
-    witnessContact: wContact,
-    witnessAge: wAge,
-    witnessAddress: wAddress,
-    witnessStatement: wStatement,
-    complainantStatement: report.complainantStatement,
-    summary: report.summaryOfIncident,
-    report,
-    status: "",
-    caseNumber: "",
+    status: defaultStatus,
     remarks: "",
   });
 
   const [errors, setErrors] = useState<{ [key in keyof BlotterFormData]?: string }>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -108,31 +85,47 @@ const ReportDetailsModal = ({ open, onClose, report }: ReportDetailsModalProps) 
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors: { [key in keyof BlotterFormData]?: string } = {};
-
-    if (!formData.status) {
-      newErrors.status = "Status is required.";
-    }
-    if (!formData.remarks.trim()) {
-      newErrors.remarks = "Remarks are required.";
-    }
-
+    if (!formData.status) newErrors.status = "Status is required.";
+    if (!formData.remarks.trim()) newErrors.remarks = "Remarks are required.";
     setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
-    if (Object.keys(newErrors).length > 0) {
-      return;
+    try {
+      setSubmitting(true);
+
+      // Update the status on blockchain
+      if (!window.ethereum) throw new Error("MetaMask not detected");
+      if (!CONTRACT_ADDRESS) throw new Error("Smart contract address not set.");
+
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, ReportSystemABI, signer);
+
+      // Call smart contract: updateReportStatus(uint256 id, Status newStatus)
+      const tx = await contract.updateReportStatus(report.id, Number(formData.status));
+      await tx.wait();
+
+      await Swal.fire({
+        icon: "success",
+        title: "Update Submitted",
+        text: "Blotter report status has been successfully updated on blockchain.",
+      });
+
+      onClose(); // Close modal on success
+    } catch (err: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Update Failed",
+        text: err?.message || "An error occurred while updating the report status.",
+      });
+    } finally {
+      setSubmitting(false);
     }
-
-    Swal.fire({
-      icon: "success",
-      title: "Update Submitted",
-      text: "Blotter report has been successfully updated.",
-    });
-
-    // Your API call or further logic here
   };
 
   const renderError = (field: keyof BlotterFormData) =>
@@ -179,14 +172,16 @@ const ReportDetailsModal = ({ open, onClose, report }: ReportDetailsModalProps) 
                   value={formData.status}
                   onChange={handleChange}
                   className="custom-input"
+                  disabled={submitting}
                 >
                   <option value="" disabled>
                     --Select status--
                   </option>
-                  <option value="resolved">Resolved</option>
-                  <option value="revoked">Revoked</option>
-                  <option value="pending">Pending</option>
-                  <option value="dismissed">Dismissed</option>
+                  {STATUS_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
                 {renderError("status")}
               </div>
@@ -203,6 +198,7 @@ const ReportDetailsModal = ({ open, onClose, report }: ReportDetailsModalProps) 
                   onChange={handleChange}
                   className="custom-textarea"
                   placeholder="Enter remarks..."
+                  disabled={submitting}
                 />
                 {renderError("remarks")}
               </div>
@@ -210,8 +206,8 @@ const ReportDetailsModal = ({ open, onClose, report }: ReportDetailsModalProps) 
 
             {/* Submit Button */}
             <div className="modal-footer">
-              <button type="submit" className="btn btn-blue">
-                Update
+              <button type="submit" className="btn btn-blue" disabled={submitting}>
+                {submitting ? "Updating..." : "Update"}
               </button>
             </div>
           </div>

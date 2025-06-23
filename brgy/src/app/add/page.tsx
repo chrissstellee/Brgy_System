@@ -46,7 +46,7 @@ type FormData = {
 };
 
 export default function AddBlotter() {
-  const router = useRouter(); // ✅ Hook placed at the top level
+  const router = useRouter();
 
   const [formData, setFormData] = useState<FormData>({
     complainantName: "",
@@ -148,72 +148,97 @@ export default function AddBlotter() {
       return;
     }
 
-    const complainantInfo = bundleSection([
-      formData.complainantName,
-      formData.complainantContact,
-      formData.complainantAge,
-      formData.complainantAddress,
-    ]);
-    const respondentInfo = bundleSection([
-      formData.respondentName,
-      formData.respondentContact,
-      formData.respondentAge,
-      formData.respondentAddress,
-    ]);
-    const witnessInfo = bundleSection([
-      formData.witnessName,
-      formData.witnessContact,
-      formData.witnessAge,
-      formData.witnessAddress,
-      formData.witnessStatement,
-    ]);
+  const complainantInfo = bundleSection([
+    formData.complainantName,
+    formData.complainantContact,
+    formData.complainantAge,
+    formData.complainantAddress,
+  ]);
+  const respondentInfo = bundleSection([
+    formData.respondentName,
+    formData.respondentContact,
+    formData.respondentAge,
+    formData.respondentAddress,
+  ]);
+  const witnessInfo = bundleSection([
+    formData.witnessName,
+    formData.witnessContact,
+    formData.witnessAge,
+    formData.witnessAddress,
+    formData.witnessStatement,
+  ]);
 
-    try {
-      // @ts-ignore
-      if (!window.ethereum) {
-        alert("MetaMask not detected");
-        return;
-      }
+  try {
+    // @ts-ignore
+    if (!window.ethereum) {
+      alert("MetaMask not detected");
+      return;
+    }
 
-      if (!CONTRACT_ADDRESS) {
-        alert("Smart contract address not set.");
-        return;
-      }
+    if (!CONTRACT_ADDRESS) {
+      alert("Smart contract address not set.");
+      return;
+    }
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ReportSystemABI, signer);
+    await window.ethereum.request({ method: "eth_requestAccounts" });
 
-      const tx = await contract.submitBlotterReport(
-        complainantInfo,
-        respondentInfo,
-        formData.incidentType,
-        formData.natureOfComplaint,
-        formData.incidentDate,
-        formData.incidentTime,
-        formData.incidentLocation,
-        formData.summary,
-        formData.complainantStatement,
-        witnessInfo
-      );
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, ReportSystemABI, signer);
 
-      await tx.wait(); // Wait for blockchain transaction
+    const tx = await contract.submitBlotterReport(
+      complainantInfo,
+      respondentInfo,
+      formData.incidentType,
+      formData.natureOfComplaint,
+      formData.incidentDate,
+      formData.incidentTime,
+      formData.incidentLocation,
+      formData.summary,
+      formData.complainantStatement,
+      witnessInfo
+    );
 
-      // Show SweetAlert2 success
+    await tx.wait(); // Wait for blockchain transaction
+
+    // Save tx.hash locally for demo (ideally, send to backend for storage)
+    let savedHashes: Record<number, string> = {};
+    if (typeof window !== "undefined") {
+      savedHashes = JSON.parse(localStorage.getItem("brgy_tx_hashes") || "{}");
+    }
+    // Get reportCount from contract to know the ID
+    const latestId = await contract.reportCount();
+    savedHashes[latestId] = tx.hash;
+    localStorage.setItem("brgy_tx_hashes", JSON.stringify(savedHashes));
+    
+    await Swal.fire({
+      icon: "success",
+      title: "Report Submitted",
+      text: "The blotter report has been successfully submitted to the blockchain.",
+      confirmButtonText: "Back to Home",
+      confirmButtonColor: "#1A3A6D",
+    });
+
+    router.push("/list"); // Redirect after confirmation
+
+  } catch (err: any) {
+    if (
+      err?.message?.toLowerCase().includes("rate limited") ||
+      err?.code === -32005 ||
+      (err?.error && err?.error.code === -32005)
+    ) {
       await Swal.fire({
-        icon: "success",
-        title: "Report Submitted",
-        text: "The blotter report has been successfully submitted to the blockchain.",
-        confirmButtonText: "Back to Home",
+        icon: "error",
+        title: "Network Busy",
+        text: "Submission failed because the network provider is limiting requests. Please wait a moment, then try again.",
+        confirmButtonText: "Okay",
         confirmButtonColor: "#1A3A6D",
       });
-
-      router.push("/list"); // Redirect after confirmation
-
-    } catch (err: any) {
-      alert(`Submission failed: ${err?.message || err}`);
+      return;
     }
-  };
+    alert(`Submission failed: ${err?.message || err}`);
+  }
+};
 
   const renderInputClass = (field: keyof FormData, base: string = "custom-input") =>
     `${base} ${errors[field] ? "input-error" : ""}`;
@@ -224,6 +249,7 @@ export default function AddBlotter() {
         {errors[field]}
       </p>
     ) : null;
+
   return (
     <div className="container">
       <div className="content-wrapper">

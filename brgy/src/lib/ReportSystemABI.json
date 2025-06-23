@@ -1,4 +1,4 @@
- [
+[
     {
       "anonymous": false,
       "inputs": [
@@ -40,6 +40,25 @@
         }
       ],
       "name": "BlotterReportSubmitted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "enum ReportSystem.Status",
+          "name": "status",
+          "type": "uint8"
+        }
+      ],
+      "name": "StatusUpdated",
       "type": "event"
     },
     {
@@ -118,6 +137,11 @@
               "internalType": "uint256",
               "name": "timestamp",
               "type": "uint256"
+            },
+            {
+              "internalType": "enum ReportSystem.Status",
+              "name": "status",
+              "type": "uint8"
             }
           ],
           "internalType": "struct ReportSystem.BlotterReport",
@@ -215,6 +239,11 @@
           "internalType": "uint256",
           "name": "timestamp",
           "type": "uint256"
+        },
+        {
+          "internalType": "enum ReportSystem.Status",
+          "name": "status",
+          "type": "uint8"
         }
       ],
       "stateMutability": "view",
@@ -274,6 +303,24 @@
         }
       ],
       "name": "submitBlotterReport",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "enum ReportSystem.Status",
+          "name": "newStatus",
+          "type": "uint8"
+        }
+      ],
+      "name": "updateReportStatus",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

@@ -2,11 +2,13 @@
 pragma solidity ^0.8.20;
 
 contract ReportSystem {
+    enum Status { Pending, Resolved, Revoked, Dismissed }
+
     struct BlotterReport {
         uint256 id;
         address reporter;
-        string complainantInfo;      // "Name|Contact|Age|Address"
-        string respondentInfo;       // "Name|Contact|Age|Address"
+        string complainantInfo;
+        string respondentInfo;
         string incidentType;
         string natureOfComplaint;
         string date;
@@ -14,8 +16,9 @@ contract ReportSystem {
         string location;
         string summaryOfIncident;
         string complainantStatement;
-        string witnessInfo;          // "Name|Contact|Age|Address|Statement"
+        string witnessInfo;
         uint256 timestamp;
+        Status status;
     }
 
     uint256 public reportCount;
@@ -29,6 +32,8 @@ contract ReportSystem {
         string time,
         uint256 timestamp
     );
+
+    event StatusUpdated(uint256 indexed id, Status status);
 
     function submitBlotterReport(
         string memory complainantInfo,
@@ -57,7 +62,8 @@ contract ReportSystem {
             summaryOfIncident: summaryOfIncident,
             complainantStatement: complainantStatement,
             witnessInfo: witnessInfo,
-            timestamp: block.timestamp
+            timestamp: block.timestamp,
+            status: Status.Pending
         });
 
         emit BlotterReportSubmitted(
@@ -68,6 +74,15 @@ contract ReportSystem {
             time,
             block.timestamp
         );
+    }
+
+    function updateReportStatus(uint256 id, Status newStatus) public {
+        require(id > 0 && id <= reportCount, "Report does not exist.");
+        // Restrict this as you want, e.g. only admin or reporter
+        // require(msg.sender == owner || msg.sender == reports[id].reporter, "Not allowed.");
+
+        reports[id].status = newStatus;
+        emit StatusUpdated(id, newStatus);
     }
 
     function getReport(uint256 id) public view returns (BlotterReport memory) {
