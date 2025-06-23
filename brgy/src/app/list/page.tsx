@@ -16,6 +16,7 @@ import ReportUpdateModal from "@/components/edit"; //For pop up edit
 import "@/styles/list.css";
 import "@/styles/table.css";
 import "@/styles/button.css";
+import "@/styles/chips.css";
 
 // CONTRACT ADDRESS (set in .env.local as NEXT_PUBLIC_DEPLOYED_CONTRACT_ADDRESS)
 const CONTRACT_ADDRESS =
@@ -37,7 +38,7 @@ type Report = {
   witnessInfo: string;
   timestamp: string;
 
-  // status: string;
+  status: string;
 };
 
 function splitSection(section: string) {
@@ -200,20 +201,20 @@ function splitSection(section: string) {
 //   // );
 // }
 
-// function formatStatus(blotterStatus: string) {
-//   switch (blotterStatus) {
-//     case "resolved":
-//       return "Resolved";
-//     case "pending":
-//       return "Pending";
-//     case "revoked":
-//       return "Revoked";
-//     case "dismissed":
-//       return "Dismissed";
-//     default:
-//       return blotterStatus;
-//   }
-// }
+function formatStatus(blotterStatus: string) {
+  switch (blotterStatus) {
+    case "resolved":
+      return "Resolved";
+    case "pending":
+      return "Pending";
+    case "revoked":
+      return "Revoked";
+    case "dismissed":
+      return "Dismissed";
+    default:
+      return blotterStatus;
+  }
+}
 
 export default function BlotterList() {
   const [search, setSearch] = useState("");
@@ -251,7 +252,7 @@ export default function BlotterList() {
             witnessInfo: r.witnessInfo,
             timestamp: new Date(Number(r.timestamp) * 1000).toLocaleString(),
 
-            // status: "pending",
+            status: "pending",
           });
         }
         setAllBlotters(items.reverse()); // newest first
@@ -333,7 +334,7 @@ export default function BlotterList() {
                     <th>Case Number</th>
                     <th>Respondent</th>
                     <th>Incident Type</th>
-                    {/* <th>Status</th> */}
+                    <th>Status</th>
                     <th>Date Created</th>
                     <th>Action</th>
                   </tr>
@@ -341,7 +342,7 @@ export default function BlotterList() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="no-records">
+                      <td colSpan={7} className="no-records">
                         Loading reports from blockchain...
                       </td>
                     </tr>
@@ -353,12 +354,12 @@ export default function BlotterList() {
                           <td>{indexOfFirst + index + 1}</td>
                           <td>{`CASE-${blotter.id}`}</td>
                           <td>{respondentName}</td>
-                          {/* <td className="table-status">
+                          <td>{blotter.incidentType}</td>
+                          <td className="table-status">
                             <span className={`chip ${blotter.status}`}>
                               {formatStatus(blotter.status)}
                             </span>
-                          </td> */}
-                          <td>{blotter.incidentType}</td>
+                          </td>
                           <td>{blotter.date}</td>
                           <td>
                             <div className="action-gap">
@@ -388,7 +389,7 @@ export default function BlotterList() {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={6} className="no-records">
+                      <td colSpan={7} className="no-records">
                         No blotter cases found.
                       </td>
                     </tr>
