@@ -1,6 +1,7 @@
 /* pdf-preview.css */
 
 .pdf-document {
+  position: relative;
   width: 100%;
   max-width: 800px;
   margin: auto;
@@ -8,7 +9,32 @@
   font-family: 'Arial', sans-serif;
   font-size: 14px;
   color: #000;
-  background: #fff;
+  /* background: var(--color-bg); */
+  overflow: hidden;
+}
+
+/* Centered, transparent background image */
+.pdf-document::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 600px; /* Adjust size if needed */
+  height: 600px;
+  background-image: url("/favicon.svg"); /* Ensure correct path */
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  transform: translate(-50%, -50%);
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure content is above the watermark */
+.pdf-document > * {
+  position: relative;
+  z-index: 1;
 }
 
 .form-title {

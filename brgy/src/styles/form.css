@@ -9,6 +9,7 @@
   justify-content: center;
   align-items: flex-start;
   padding: 2rem 1rem;
+
 }
 
 /* Card-style container for the form content */
@@ -131,6 +132,10 @@
   transition: border-color 0.2s ease-in-out;
   background-color: #fff;
   font-family: inherit;
+}
+
+.update-form {
+  padding: 2rem;
 }
 
 /* Focus state for textareas

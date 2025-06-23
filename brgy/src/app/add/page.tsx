@@ -1,12 +1,26 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable react/no-unescaped-entities */
 "use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import BlotterPdfModal from "@/components/pdf-modal";
+import Swal from "sweetalert2";
+
+import { ethers } from "ethers";
+import ReportSystemABI from "@/lib/ReportSystemABI.json";
 
 import "@/styles/form.css";
 import "@/styles/button.css";
 import "@/styles/container.css";
 import "@/styles/validation.css";
+
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_DEPLOYED_CONTRACT_ADDRESS;
+
+function bundleSection(fields: string[]) {
+  return fields.join("|");
+}
 
 type FormData = {
   complainantName: string;
@@ -32,6 +46,8 @@ type FormData = {
 };
 
 export default function AddBlotter() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState<FormData>({
     complainantName: "",
     complainantContact: "",
@@ -56,44 +72,32 @@ export default function AddBlotter() {
   });
 
   const [errors, setErrors] = useState<{ [key in keyof FormData]?: string }>({});
-  const [showPdfModal, setShowPdfModal] = useState(false);
 
-  // Get today's date in YYYY-MM-DD format for min attribute & validation
-  const getTodayDate = (): string => {
-    return new Date().toISOString().split("T")[0];
-  };
+  const getTodayDate = (): string => new Date().toISOString().split("T")[0];
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     const key = name as keyof FormData;
 
-    // Limit contact fields to max 11 digits and only numeric input
     if (
-      (key === "complainantContact" ||
-        key === "respondentContact" ||
-        key === "witnessContact") &&
+      (key === "complainantContact" || key === "respondentContact" || key === "witnessContact") &&
       (value.length > 11 || !/^\d*$/.test(value))
     ) {
-      return; // Reject if too long or non-numeric
+      return;
     }
 
-    // Limit age fields: numeric only, 1 to 3 digits, no zero or empty
     if (
-      (key === "complainantAge" ||
-        key === "respondentAge" ||
-        key === "witnessAge") &&
+      (key === "complainantAge" || key === "respondentAge" || key === "witnessAge") &&
       (!/^\d{0,3}$/.test(value) || value === "0")
     ) {
       return;
     }
 
     setFormData((prev) => ({ ...prev, [key]: value }));
-    setErrors((prev) => ({ ...prev, [key]: "" })); // Clear error on change
+    setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const requiredFields: (keyof FormData)[] = [
@@ -122,15 +126,10 @@ export default function AddBlotter() {
       }
     });
 
-    // incidentDate cannot be in the future
-    if (
-      formData.incidentDate &&
-      formData.incidentDate > getTodayDate()
-    ) {
+    if (formData.incidentDate && formData.incidentDate > getTodayDate()) {
       newErrors.incidentDate = "Incident date cannot be in the future";
     }
 
-    // Age is required and cannot be 0 and more than 3 inputs
     ["complainantAge", "respondentAge"].forEach((field) => {
       const age = formData[field as keyof FormData];
       if (!age) {
@@ -140,12 +139,8 @@ export default function AddBlotter() {
       }
     });
 
-    // For witnessAge, only validate if it has a value (optional field)
-    const witnessAge = formData.witnessAge;
-    if (witnessAge) {
-      if (witnessAge === "0" || !/^\d{1,3}$/.test(witnessAge)) {
-        newErrors.witnessAge = "Enter a valid age";
-      }
+    if (formData.witnessAge && (formData.witnessAge === "0" || !/^\d{1,3}$/.test(formData.witnessAge))) {
+      newErrors.witnessAge = "Enter a valid age";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -153,14 +148,100 @@ export default function AddBlotter() {
       return;
     }
 
-    // No errors — show PDF modal
-    setShowPdfModal(true);
-  };
+  const complainantInfo = bundleSection([
+    formData.complainantName,
+    formData.complainantContact,
+    formData.complainantAge,
+    formData.complainantAddress,
+  ]);
+  const respondentInfo = bundleSection([
+    formData.respondentName,
+    formData.respondentContact,
+    formData.respondentAge,
+    formData.respondentAddress,
+  ]);
+  const witnessInfo = bundleSection([
+    formData.witnessName,
+    formData.witnessContact,
+    formData.witnessAge,
+    formData.witnessAddress,
+    formData.witnessStatement,
+  ]);
 
-  const renderInputClass = (
-    field: keyof FormData,
-    base: string = "custom-input"
-  ) => `${base} ${errors[field] ? "input-error" : ""}`;
+  try {
+    // @ts-ignore
+    if (!window.ethereum) {
+      alert("MetaMask not detected");
+      return;
+    }
+
+    if (!CONTRACT_ADDRESS) {
+      alert("Smart contract address not set.");
+      return;
+    }
+
+    await window.ethereum.request({ method: "eth_requestAccounts" });
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, ReportSystemABI, signer);
+
+    const tx = await contract.submitBlotterReport(
+      complainantInfo,
+      respondentInfo,
+      formData.incidentType,
+      formData.natureOfComplaint,
+      formData.incidentDate,
+      formData.incidentTime,
+      formData.incidentLocation,
+      formData.summary,
+      formData.complainantStatement,
+      witnessInfo
+    );
+
+    await tx.wait(); // Wait for blockchain transaction
+
+    // Save tx.hash locally for demo (ideally, send to backend for storage)
+    let savedHashes: Record<number, string> = {};
+    if (typeof window !== "undefined") {
+      savedHashes = JSON.parse(localStorage.getItem("brgy_tx_hashes") || "{}");
+    }
+    // Get reportCount from contract to know the ID
+    const latestId = await contract.reportCount();
+    savedHashes[latestId] = tx.hash;
+    localStorage.setItem("brgy_tx_hashes", JSON.stringify(savedHashes));
+    
+    await Swal.fire({
+      icon: "success",
+      title: "Report Submitted",
+      text: "The blotter report has been successfully submitted to the blockchain.",
+      confirmButtonText: "Back to Home",
+      confirmButtonColor: "#1A3A6D",
+    });
+
+    router.push("/list"); // Redirect after confirmation
+
+  } catch (err: any) {
+    if (
+      err?.message?.toLowerCase().includes("rate limited") ||
+      err?.code === -32005 ||
+      (err?.error && err?.error.code === -32005)
+    ) {
+      await Swal.fire({
+        icon: "error",
+        title: "Network Busy",
+        text: "Submission failed because the network provider is limiting requests. Please wait a moment, then try again.",
+        confirmButtonText: "Okay",
+        confirmButtonColor: "#1A3A6D",
+      });
+      return;
+    }
+    alert(`Submission failed: ${err?.message || err}`);
+  }
+};
+
+  const renderInputClass = (field: keyof FormData, base: string = "custom-input") =>
+    `${base} ${errors[field] ? "input-error" : ""}`;
 
   const renderError = (field: keyof FormData) =>
     errors[field] ? (
@@ -172,7 +253,7 @@ export default function AddBlotter() {
   return (
     <div className="container">
       <div className="content-wrapper">
-        <div className="form-container">
+        <div className="form-container" style={{ paddingTop: "80px" }}>
           <h1 className="form-title">BLOTTER FORM</h1>
           <form onSubmit={handleSubmit}>
             {/* A. Complainant Information */}
@@ -215,7 +296,6 @@ export default function AddBlotter() {
                 {renderError("complainantAge")}
               </div>
             </div>
-
             <div className="grid-4 mt-5">
               <div className="form-group col-span-4">
                 <label className="form-label">Address</label>
@@ -271,7 +351,6 @@ export default function AddBlotter() {
                 {renderError("respondentAge")}
               </div>
             </div>
-
             <div className="grid-4 mt-5">
               <div className="form-group col-span-4">
                 <label className="form-label">Address</label>
@@ -325,7 +404,7 @@ export default function AddBlotter() {
                   type="date"
                   name="incidentDate"
                   value={formData.incidentDate}
-                  min={getTodayDate()}
+                  max={getTodayDate()}
                   onChange={handleChange}
                   className={renderInputClass("incidentDate")}
                 />
@@ -343,7 +422,6 @@ export default function AddBlotter() {
                 {renderError("incidentTime")}
               </div>
             </div>
-
             <div className="grid-4 mt-5">
               <div className="form-group col-span-4">
                 <label className="form-label">Location</label>
@@ -456,21 +534,16 @@ export default function AddBlotter() {
 
             {/* Button Group */}
             <div className="button-group">
-              <Link href="/list" className="button button-cancel">Cancel</Link>
-              <button type="submit" className="button button-save">Save</button>
+              <Link href="/list" className="button button-cancel">
+                Cancel
+              </Link>
+              <button type="submit" className="button button-save">
+                Save
+              </button>
             </div>
           </form>
         </div>
       </div>
-
-      {/* PDF Modal */}
-      {showPdfModal && (
-        <BlotterPdfModal
-          formData={formData}
-          onClose={() => setShowPdfModal(false)}
-        />
-      )}
-
     </div>
   );
 }

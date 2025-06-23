@@ -1,5 +1,12 @@
 /* View button at the Blotter Table */
-.action-btn {
+.action-gap {
+  display: flex; /* ← This is required */
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-view-btn {
   border: none;
   padding: 4px 12px;
   border-radius: 4px;
@@ -10,8 +17,15 @@
   font-weight: 500;
 }
 
-.action-btn:hover {
-  color: #1a73e8;
+.action-edit-btn {
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: var(--color-green);
+  cursor: pointer;
+  color: var(--color-bg-secondary);
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .filter-btn,
