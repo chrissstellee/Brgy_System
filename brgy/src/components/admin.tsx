@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import Link from 'next/link';
 import Image from 'next/image';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useEffect } from 'react';
@@ -25,7 +24,7 @@ export default function Navbar() {
     <nav className="navbar">
           <div className="navbar-logo">
             <Image src="/favicon.svg" alt="BEIS logo" width={50} height={50} />
-            <span className="navbar-title">BEIS</span>
+            <span className="navbar-title">BIRS</span>
           </div>
 
       {/* RainbowKit Wallet Connect / Disconnect Button */}

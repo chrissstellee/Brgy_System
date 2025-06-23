@@ -2,9 +2,12 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable react/no-unescaped-entities */
 "use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import BlotterPdfModal from "@/components/pdf-modal";
+import Swal from "sweetalert2";
+
 import { ethers } from "ethers";
 import ReportSystemABI from "@/lib/ReportSystemABI.json";
 
@@ -13,9 +16,7 @@ import "@/styles/button.css";
 import "@/styles/container.css";
 import "@/styles/validation.css";
 
-// You can use .env for this, or hardcode for now:
-const CONTRACT_ADDRESS =
-  process.env.NEXT_PUBLIC_DEPLOYED_CONTRACT_ADDRESS; // <--- Replace with actual deployed address
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_DEPLOYED_CONTRACT_ADDRESS;
 
 function bundleSection(fields: string[]) {
   return fields.join("|");
@@ -45,6 +46,8 @@ type FormData = {
 };
 
 export default function AddBlotter() {
+  const router = useRouter(); // ✅ Hook placed at the top level
+
   const [formData, setFormData] = useState<FormData>({
     complainantName: "",
     complainantContact: "",
@@ -69,33 +72,22 @@ export default function AddBlotter() {
   });
 
   const [errors, setErrors] = useState<{ [key in keyof FormData]?: string }>({});
-  const [showPdfModal, setShowPdfModal] = useState(false);
 
-  const getTodayDate = (): string => {
-    return new Date().toISOString().split("T")[0];
-  };
+  const getTodayDate = (): string => new Date().toISOString().split("T")[0];
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     const key = name as keyof FormData;
 
-    // Limit contact fields to max 11 digits and only numeric input
     if (
-      (key === "complainantContact" ||
-        key === "respondentContact" ||
-        key === "witnessContact") &&
+      (key === "complainantContact" || key === "respondentContact" || key === "witnessContact") &&
       (value.length > 11 || !/^\d*$/.test(value))
     ) {
       return;
     }
 
-    // Limit age fields: numeric only, 1 to 3 digits, no zero or empty
     if (
-      (key === "complainantAge" ||
-        key === "respondentAge" ||
-        key === "witnessAge") &&
+      (key === "complainantAge" || key === "respondentAge" || key === "witnessAge") &&
       (!/^\d{0,3}$/.test(value) || value === "0")
     ) {
       return;
@@ -134,12 +126,10 @@ export default function AddBlotter() {
       }
     });
 
-    // incidentDate cannot be in the future
     if (formData.incidentDate && formData.incidentDate > getTodayDate()) {
       newErrors.incidentDate = "Incident date cannot be in the future";
     }
 
-    // Age validation
     ["complainantAge", "respondentAge"].forEach((field) => {
       const age = formData[field as keyof FormData];
       if (!age) {
@@ -149,12 +139,8 @@ export default function AddBlotter() {
       }
     });
 
-    // For witnessAge, only validate if it has a value (optional field)
-    const witnessAge = formData.witnessAge;
-    if (witnessAge) {
-      if (witnessAge === "0" || !/^\d{1,3}$/.test(witnessAge)) {
-        newErrors.witnessAge = "Enter a valid age";
-      }
+    if (formData.witnessAge && (formData.witnessAge === "0" || !/^\d{1,3}$/.test(formData.witnessAge))) {
+      newErrors.witnessAge = "Enter a valid age";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -162,7 +148,6 @@ export default function AddBlotter() {
       return;
     }
 
-    // 🟢 Bundle form data for contract call
     const complainantInfo = bundleSection([
       formData.complainantName,
       formData.complainantContact,
@@ -191,7 +176,7 @@ export default function AddBlotter() {
       }
 
       if (!CONTRACT_ADDRESS) {
-        alert("Smart contract address is not set in environment variables.");
+        alert("Smart contract address not set.");
         return;
       }
 
@@ -211,40 +196,27 @@ export default function AddBlotter() {
         formData.complainantStatement,
         witnessInfo
       );
-      await tx.wait();
-      alert("Report submitted to blockchain!");
 
-      setFormData({
-        complainantName: "",
-        complainantContact: "",
-        complainantAge: "",
-        complainantAddress: "",
-        respondentName: "",
-        respondentContact: "",
-        respondentAge: "",
-        respondentAddress: "",
-        incidentType: "",
-        natureOfComplaint: "",
-        incidentDate: "",
-        incidentTime: "",
-        incidentLocation: "",
-        summary: "",
-        complainantStatement: "",
-        witnessName: "",
-        witnessContact: "",
-        witnessAge: "",
-        witnessAddress: "",
-        witnessStatement: "",
+      await tx.wait(); // Wait for blockchain transaction
+
+      // Show SweetAlert2 success
+      await Swal.fire({
+        icon: "success",
+        title: "Report Submitted",
+        text: "The blotter report has been successfully submitted to the blockchain.",
+        confirmButtonText: "Back to Home",
+        confirmButtonColor: "#1A3A6D",
       });
+
+      router.push("/list"); // Redirect after confirmation
+
     } catch (err: any) {
       alert(`Submission failed: ${err?.message || err}`);
     }
   };
 
-  const renderInputClass = (
-    field: keyof FormData,
-    base: string = "custom-input"
-  ) => `${base} ${errors[field] ? "input-error" : ""}`;
+  const renderInputClass = (field: keyof FormData, base: string = "custom-input") =>
+    `${base} ${errors[field] ? "input-error" : ""}`;
 
   const renderError = (field: keyof FormData) =>
     errors[field] ? (
@@ -252,11 +224,10 @@ export default function AddBlotter() {
         {errors[field]}
       </p>
     ) : null;
-
   return (
     <div className="container">
       <div className="content-wrapper">
-        <div className="form-container">
+        <div className="form-container" style={{ paddingTop: "80px" }}>
           <h1 className="form-title">BLOTTER FORM</h1>
           <form onSubmit={handleSubmit}>
             {/* A. Complainant Information */}
@@ -547,14 +518,6 @@ export default function AddBlotter() {
           </form>
         </div>
       </div>
-
-      {/* PDF Modal */}
-      {showPdfModal && (
-        <BlotterPdfModal
-          formData={formData}
-          onClose={() => setShowPdfModal(false)}
-        />
-      )}
     </div>
   );
 }

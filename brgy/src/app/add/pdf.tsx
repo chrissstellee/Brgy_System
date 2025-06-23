@@ -2,7 +2,23 @@
 import React from "react";
 import "@/styles/pdf.css";
 
-type FormData = {
+export type Report = {
+  id: number;
+  reporter: string;
+  complainantInfo: string;
+  respondentInfo: string;
+  incidentType: string;
+  natureOfComplaint: string;
+  date: string;
+  time: string;
+  location: string;
+  summaryOfIncident: string;
+  complainantStatement: string;
+  witnessInfo: string;
+  timestamp: string;
+};
+
+export type BlotterFormData = {
   complainantName: string;
   complainantContact: string;
   complainantAge: string;
@@ -11,25 +27,38 @@ type FormData = {
   respondentContact: string;
   respondentAge: string;
   respondentAddress: string;
-  incidentType: string;
-  natureOfComplaint: string;
-  incidentDate: string;
-  incidentTime: string;
-  incidentLocation: string;
-  summary: string;
-  complainantStatement: string;
   witnessName: string;
   witnessContact: string;
   witnessAge: string;
   witnessAddress: string;
   witnessStatement: string;
+  complainantStatement: string;
+  summary?: string;
+  report: Report;
 };
 
-const formatValue = (value: string | number | undefined | null): string => {
-  return value?.toString().trim() ? value.toString() : "N/A";
-};
+const BlotterPdfDocument: React.FC<{ formData: BlotterFormData }> = ({ formData }) => {
+  const {
+    complainantName,
+    complainantContact,
+    complainantAge,
+    complainantAddress,
+    respondentName,
+    respondentContact,
+    respondentAge,
+    respondentAddress,
+    witnessName,
+    witnessContact,
+    witnessAge,
+    witnessAddress,
+    witnessStatement,
+    complainantStatement,
+    report,
+  } = formData;
 
-const BlotterPdfPreview: React.FC<{ formData: FormData }> = ({ formData }) => {
+  // Helper to display "N/A" if the field is empty
+  const display = (value: string | undefined | null) => value?.trim() || "N/A";
+
   return (
     <div className="pdf-document">
       <h1 className="form-title">Barangay Blotter Report</h1>
@@ -40,82 +69,82 @@ const BlotterPdfPreview: React.FC<{ formData: FormData }> = ({ formData }) => {
 
       <div className="form-row">
         <label>Date Filed:</label>
-        <span>{formatValue(formData.incidentDate)}</span>
+        <span>{display(report.timestamp)}</span>
         <label>Case Number:</label>
-        <span>__________</span>
+        <span>{`CASE-${report.id}`}</span>
       </div>
 
       <h2 className="section-title">Complainant Information</h2>
       <div className="form-row">
         <label>Full Name:</label>
-        <span>{formatValue(formData.complainantName)}</span>
+        <span>{display(complainantName)}</span>
         <label>Age:</label>
-        <span>{formatValue(formData.complainantAge)}</span>
+        <span>{display(complainantAge)}</span>
         <label>Contact Number:</label>
-        <span>{formatValue(formData.complainantContact)}</span>
+        <span>{display(complainantContact)}</span>
       </div>
       <div className="form-row">
         <label>Address:</label>
-        <span>{formatValue(formData.complainantAddress)}</span>
+        <span>{display(complainantAddress)}</span>
         <label>Location:</label>
-        <span>{formatValue(formData.incidentLocation)}</span>
+        <span>{display(report.location)}</span>
       </div>
 
       <h2 className="section-title">Respondent Information</h2>
       <div className="form-row">
         <label>Full Name:</label>
-        <span>{formatValue(formData.respondentName)}</span>
+        <span>{display(respondentName)}</span>
         <label>Age:</label>
-        <span>{formatValue(formData.respondentAge)}</span>
+        <span>{display(respondentAge)}</span>
         <label>Contact Number:</label>
-        <span>{formatValue(formData.respondentContact)}</span>
+        <span>{display(respondentContact)}</span>
       </div>
       <div className="form-row">
         <label>Address:</label>
-        <span>{formatValue(formData.respondentAddress)}</span>
+        <span>{display(respondentAddress)}</span>
       </div>
 
       <h2 className="section-title">Witness Information</h2>
       <div className="form-row">
         <label>Full Name:</label>
-        <span>{formatValue(formData.witnessName)}</span>
+        <span>{display(witnessName)}</span>
         <label>Age:</label>
-        <span>{formatValue(formData.witnessAge)}</span>
+        <span>{display(witnessAge)}</span>
         <label>Contact Number:</label>
-        <span>{formatValue(formData.witnessContact)}</span>
+        <span>{display(witnessContact)}</span>
       </div>
       <div className="form-row">
         <label>Address:</label>
-        <span>{formatValue(formData.witnessAddress)}</span>
+        <span>{display(witnessAddress)}</span>
       </div>
 
       <h2 className="section-title">Incident Details</h2>
       <div className="form-row">
         <label>Date of Incident:</label>
-        <span>{formatValue(formData.incidentDate)}</span>
+        <span>{display(report.date)}</span>
         <label>Time:</label>
-        <span>{formatValue(formData.incidentTime)}</span>
+        <span>{display(report.time)}</span>
         <label>Type of Incident:</label>
-        <span>{formatValue(formData.incidentType)}</span>
+        <span>{display(report.incidentType)}</span>
       </div>
       <div className="form-row">
         <label>Nature of Complaint:</label>
-        <span>{formatValue(formData.natureOfComplaint)}</span>
+        <span>{display(report.natureOfComplaint)}</span>
       </div>
 
       <h2 className="section-title">Incident Summary</h2>
       <div className="form-row">
-        <span>{formatValue(formData.summary)}</span>
+        <span>{display(report.summaryOfIncident)}</span>
       </div>
 
       <h2 className="section-title">Complainant’s Statement</h2>
       <div className="form-row">
-        <span>{formatValue(formData.complainantStatement)}</span>
+        <span>{display(complainantStatement)}</span>
       </div>
 
       <h2 className="section-title">Witness Statement</h2>
       <div className="form-row">
-        <span>{formatValue(formData.witnessStatement)}</span>
+        <span>{display(witnessStatement)}</span>
       </div>
 
       <div className="signature-section">
@@ -134,4 +163,4 @@ const BlotterPdfPreview: React.FC<{ formData: FormData }> = ({ formData }) => {
   );
 };
 
-export default BlotterPdfPreview;
+export default BlotterPdfDocument;
